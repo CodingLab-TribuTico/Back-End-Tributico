@@ -26,6 +26,8 @@ public class User implements UserDetails {
     @Column(unique = true, length = 9, nullable = false)
     private String cedula;
     private LocalDate birthDate;
+    @Column (nullable = false)
+    private boolean status = true;
 
     @Column(nullable = false)
     private String password;
@@ -158,5 +160,13 @@ public class User implements UserDetails {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

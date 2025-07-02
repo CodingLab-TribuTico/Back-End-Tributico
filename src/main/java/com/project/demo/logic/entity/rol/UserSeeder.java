@@ -58,6 +58,7 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
         user.setRole(optionalRole.get());
         user.setCedula(superAdminRole.getCedula());
         user.setBirthDate(superAdminRole.getBirthDate());
+        user.setStatus(true);
 
         userRepository.save(user);
     }
