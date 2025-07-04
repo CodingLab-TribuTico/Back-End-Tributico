@@ -52,7 +52,7 @@ public class UserRestController {
         meta.setPageSize(usersPage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
-                "Users retrieved successfully",
+                "Usuarios recuperados exitosamente",
                 usersPage.getContent(),
                 HttpStatus.OK,
                 meta
@@ -64,7 +64,7 @@ public class UserRestController {
     public ResponseEntity<?> addUser(@RequestBody User user, HttpServletRequest request) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        return new GlobalResponseHandler().handleResponse("User updated successfully",
+        return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
                 user, HttpStatus.OK, request);
     }
 
@@ -86,10 +86,10 @@ public class UserRestController {
             
             user.setRole(foundUser.get().getRole());
             userRepository.save(user);
-            return new GlobalResponseHandler().handleResponse("User updated successfully",
+            return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
                     user, HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("User id " + userId + " not found"  ,
+            return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado"  ,
                     HttpStatus.NOT_FOUND, request);
         }
     }
@@ -100,10 +100,10 @@ public class UserRestController {
         Optional<User> foundOrder = userRepository.findById(userId);
         if(foundOrder.isPresent()) {
             userRepository.deleteById(userId);
-            return new GlobalResponseHandler().handleResponse("User deleted successfully",
+            return new GlobalResponseHandler().handleResponse("Usuario eliminado exitosamente",
                     foundOrder.get(), HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Order id " + userId + " not found"  ,
+            return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado"  ,
                     HttpStatus.NOT_FOUND, request);
         }
     }
