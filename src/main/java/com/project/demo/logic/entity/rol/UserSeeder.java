@@ -30,17 +30,18 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        this.createUser("Jeffry", "Valverde", "super.admin@gmail.com", "superadmin123", RoleEnum.SUPER_ADMIN, "1234567890", LocalDate.of(1990, 1, 1));
-        this.createUser("Miguel", "Perez", "test@gmail.com", "test123", RoleEnum.USER, "0987654321", LocalDate.of(1995,1,1));
+        this.createUser("Jeffry", "Valverde", "Lopez", "super.admin@gmail.com", "superadmin123", RoleEnum.SUPER_ADMIN, "123456780", LocalDate.of(1990, 1, 1));
+        this.createUser("Miguel", "Perez", "Chacon", "test@gmail.com", "test123", RoleEnum.USER, "123456789", LocalDate.of(1995,1,1));
     }
 
-    private void createUser(String name, String lastName, String email, String password, RoleEnum role, String cedula, LocalDate birthDate) {
+    private void createUser(String name, String lastName, String lastname2, String email, String password, RoleEnum role, String identification, LocalDate birthDate) {
         User superAdminRole = new User();
         superAdminRole.setName(name);
         superAdminRole.setLastname(lastName);
+        superAdminRole.setLastname2(lastname2);
         superAdminRole.setEmail(email);
         superAdminRole.setPassword(password);
-        superAdminRole.setCedula(cedula);
+        superAdminRole.setIdentification(identification);
         superAdminRole.setBirthDate(birthDate);
 
         Optional<Role> optionalRole = roleRepository.findByName(role);
@@ -53,10 +54,11 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
         var user = new User();
         user.setName(superAdminRole.getName());
         user.setLastname(superAdminRole.getLastname());
+        user.setLastname2(superAdminRole.getLastname2());
         user.setEmail(superAdminRole.getEmail());
         user.setPassword(passwordEncoder.encode(superAdminRole.getPassword()));
         user.setRole(optionalRole.get());
-        user.setCedula(superAdminRole.getCedula());
+        user.setIdentification(superAdminRole.getIdentification());
         user.setBirthDate(superAdminRole.getBirthDate());
         user.setStatus(true);
 
