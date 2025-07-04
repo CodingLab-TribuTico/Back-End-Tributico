@@ -8,6 +8,7 @@ import com.project.demo.logic.entity.rol.RoleRepository;
 import com.project.demo.logic.entity.user.LoginResponse;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @RequestMapping("/auth")
@@ -78,28 +80,9 @@ public class AuthRestController {
         return ResponseEntity.ok(savedUser);
     }
 
-    @GetMapping("/google/callback")
-    public ResponseEntity<?> googleCallBack(@AuthenticationPrincipal OAuth2AuthenticationToken authenticationToken){
-        String email = authenticationToken.getPrincipal().getAttribute("email");
-
-        Optional<User> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            String token = jwtService.generateToken(user);
-
-            LoginResponse loginResponse = new LoginResponse();
-            loginResponse.setToken(token);
-            loginResponse.setExpiresIn(jwtService.getExpirationTime());
-            loginResponse.setAuthUser(user);
-
-            return ResponseEntity.ok(loginResponse);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("User not registered in the system");
-        }
-
+    @GetMapping("/google")
+    public void googleAuth(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/oauth2/authorization/google");
     }
 
 }
