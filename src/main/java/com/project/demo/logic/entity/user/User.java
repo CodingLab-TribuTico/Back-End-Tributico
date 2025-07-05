@@ -21,6 +21,7 @@ public class User implements UserDetails {
     private Long id;
     private String name;
     private String lastname;
+    private String lastname2;
     @Column(unique = true, length = 100, nullable = false)
     private String email;
     @Column(unique = true, length = 9, nullable = false)
@@ -101,6 +102,14 @@ public class User implements UserDetails {
 
     public void setLastname(String lastname) {
         this.lastname = lastname;
+    }
+
+    public String getLastname2() {
+        return lastname2;
+    }
+
+    public void setLastname2(String lastname2) {
+        this.lastname2 = lastname2;
     }
 
     public String getEmail() {

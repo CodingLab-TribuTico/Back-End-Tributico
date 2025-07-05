@@ -76,6 +76,7 @@ public class UserRestController {
             user.setId(foundUser.get().getId());
             user.setName(user.getName());
             user.setLastname(user.getLastname());
+            user.setLastname2(user.getLastname2());
             user.setEmail(user.getEmail());
 
             if(user.getPassword() == null || user.getPassword().isEmpty()) {
