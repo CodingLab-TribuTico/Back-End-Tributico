@@ -30,8 +30,8 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        this.createUser("Jeffry", "Valverde", "Lopez", "super.admin@gmail.com", "superadmin123", RoleEnum.SUPER_ADMIN, "123456780", LocalDate.of(1990, 1, 1));
-        this.createUser("Miguel", "Perez", "Chacon", "test@gmail.com", "test123", RoleEnum.USER, "123456789", LocalDate.of(1995,1,1));
+        this.createUser("Jeffry", "Valverde", "Fallas", "super.admin@gmail.com", "superadmin123", RoleEnum.SUPER_ADMIN, "305490740", LocalDate.of(1990, 1, 1));
+        this.createUser("Miguel", "Perez", "Chacon", "test@gmail.com", "test123", RoleEnum.USER, "205490740", LocalDate.of(1995,1,1));
     }
 
     private void createUser(String name, String lastName, String lastname2, String email, String password, RoleEnum role, String identification, LocalDate birthDate) {

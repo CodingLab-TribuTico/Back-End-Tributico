@@ -1,19 +1,22 @@
 package com.project.demo.logic.entity.user;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long>  {
-    @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE %?1%")
-    List<User> findUsersWithCharacterInName(String character);
-
-    @Query("SELECT u FROM User u WHERE u.name = ?1")
-    Optional<User> findByName(String name);
-
-    Optional<User> findByLastname(String lastname);
+    @Query("""
+    SELECT u FROM User u 
+    WHERE 
+        LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) OR 
+        LOWER(u.lastname) LIKE LOWER(CONCAT('%', :search, '%')) OR 
+        LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+    """)
+    Page<User> searchUsers(@Param("search") String search, Pageable pageable);
 
     Optional<User> findByEmail(String email);
 }
