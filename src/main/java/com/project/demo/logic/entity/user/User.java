@@ -1,4 +1,5 @@
 package com.project.demo.logic.entity.user;
+
 import com.project.demo.logic.entity.rol.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,12 +22,13 @@ public class User implements UserDetails {
     private Long id;
     private String name;
     private String lastname;
+    private String lastname2;
     @Column(unique = true, length = 100, nullable = false)
     private String email;
     @Column(unique = true, length = 9, nullable = false)
-    private String cedula;
+    private String identification;
     private LocalDate birthDate;
-    @Column (nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean status = true;
 
     @Column(nullable = false)
@@ -51,8 +53,8 @@ public class User implements UserDetails {
     private Role role;
 
     // Constructors
-    public User() {}
-
+    public User() {
+    }
 
     @Override
     public boolean isAccountNonExpired() {
@@ -103,6 +105,14 @@ public class User implements UserDetails {
         this.lastname = lastname;
     }
 
+    public String getLastname2() {
+        return lastname2;
+    }
+
+    public void setLastname2(String lastname2) {
+        this.lastname2 = lastname2;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -146,12 +156,12 @@ public class User implements UserDetails {
         return this;
     }
 
-    public String getCedula() {
-        return cedula;
+    public String getIdentification() {
+        return identification;
     }
 
-    public void setCedula(String cedula) {
-        this.cedula = cedula;
+    public void setIdentification(String identification) {
+        this.identification = identification;
     }
 
     public LocalDate getBirthDate() {
