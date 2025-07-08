@@ -1,4 +1,5 @@
 package com.project.demo.logic.entity.user;
+
 import com.project.demo.logic.entity.rol.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,7 +28,7 @@ public class User implements UserDetails {
     @Column(unique = true, length = 9, nullable = false)
     private String identification;
     private LocalDate birthDate;
-    @Column (nullable = false, columnDefinition = "boolean default true")
+    @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean status = true;
 
     @Column(nullable = false)
@@ -52,8 +53,8 @@ public class User implements UserDetails {
     private Role role;
 
     // Constructors
-    public User() {}
-
+    public User() {
+    }
 
     @Override
     public boolean isAccountNonExpired() {
