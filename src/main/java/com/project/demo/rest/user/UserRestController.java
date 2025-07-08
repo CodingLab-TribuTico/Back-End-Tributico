@@ -122,11 +122,14 @@ public class UserRestController {
             if (user.getLastname() != null) {
                 existingUser.setLastname(user.getLastname());
             }
+            if (user.getLastname2() != null) {
+                existingUser.setLastname2(user.getLastname2());
+            }
             if (user.getEmail() != null) {
                 existingUser.setEmail(user.getEmail());
             }
-            if (user.getCedula() != null) {
-                existingUser.setCedula(user.getCedula());
+            if (user.getIdentification() != null) {
+                existingUser.setIdentification(user.getIdentification());
             }
             if (user.getBirthDate() != null) {
                 existingUser.setBirthDate(user.getBirthDate());
@@ -135,10 +138,10 @@ public class UserRestController {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
             }
             userRepository.save(existingUser);
-            return new GlobalResponseHandler().handleResponse("User updated patch successfully",
+            return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
                     existingUser, HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("user ID " + userId + " not found",
+            return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado",
                     HttpStatus.NOT_FOUND, request);
         }
     }
