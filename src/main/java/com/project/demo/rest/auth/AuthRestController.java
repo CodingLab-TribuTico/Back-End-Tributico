@@ -10,18 +10,22 @@ import com.project.demo.logic.entity.user.LoginResponse;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @RequestMapping("/auth")
 @RestController
 public class AuthRestController {
-
 
     @Autowired
     private UserRepository userRepository;
@@ -31,8 +35,6 @@ public class AuthRestController {
 
     @Autowired
     private RoleRepository roleRepository;
-
-
 
     private final AuthenticationService authenticationService;
     private final JwtService jwtService;
@@ -77,15 +79,31 @@ public class AuthRestController {
         return ResponseEntity.ok(savedUser);
     }
 
+    @GetMapping("/google")
+    public void googleAuth(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/oauth2/authorization/google");
+    }
+
+    @GetMapping("/me/{email}")
+    public ResponseEntity<?> getUser(@PathVariable String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
     @PutMapping("/block")
     public ResponseEntity<?> blockUser(@RequestBody User user, HttpServletRequest request) {
         Optional<User> foundUser = userRepository.findByEmail(user.getEmail());
 
-        if(foundUser.isPresent()) {
+        if (foundUser.isPresent()) {
             user = foundUser.get();
 
             if (!user.isStatus()) {
-                return new GlobalResponseHandler().handleResponse("El usuario ya está bloqueado", user, HttpStatus.OK, request);
+                return new GlobalResponseHandler().handleResponse("El usuario ya está bloqueado", user, HttpStatus.OK,
+                        request);
             }
 
             user.setStatus(false);
@@ -94,7 +112,7 @@ public class AuthRestController {
             return new GlobalResponseHandler().handleResponse("Usuario bloqueado con éxito",
                     user, HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Usuario " + user.getEmail() + " no encontrado"  ,
+            return new GlobalResponseHandler().handleResponse("Usuario " + user.getEmail() + " no encontrado",
                     HttpStatus.NOT_FOUND, request);
         }
     }
