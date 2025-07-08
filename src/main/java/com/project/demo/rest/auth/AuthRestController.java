@@ -9,7 +9,7 @@ import com.project.demo.logic.entity.rol.RoleRepository;
 import com.project.demo.logic.entity.user.LoginResponse;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,6 @@ import java.util.Optional;
 @RestController
 public class AuthRestController {
 
-
     @Autowired
     private UserRepository userRepository;
 
@@ -35,7 +34,6 @@ public class AuthRestController {
 
     @Autowired
     private RoleRepository roleRepository;
-
 
     private final AuthenticationService authenticationService;
     private final JwtService jwtService;
@@ -68,7 +66,7 @@ public class AuthRestController {
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
         }
- 
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Optional<Role> optionalRole = roleRepository.findByName(RoleEnum.USER);
 
@@ -95,6 +93,27 @@ public class AuthRestController {
         }
     }
 
+    @PutMapping("/block")
+    public ResponseEntity<?> blockUser(@RequestBody User user, HttpServletRequest request) {
+        Optional<User> foundUser = userRepository.findByEmail(user.getEmail());
 
+        if (foundUser.isPresent()) {
+            user = foundUser.get();
+
+            if (!user.isStatus()) {
+                return new GlobalResponseHandler().handleResponse("El usuario ya está bloqueado", user, HttpStatus.OK,
+                        request);
+            }
+
+            user.setStatus(false);
+            userRepository.save(user);
+
+            return new GlobalResponseHandler().handleResponse("Usuario bloqueado con éxito",
+                    user, HttpStatus.OK, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Usuario " + user.getEmail() + " no encontrado",
+                    HttpStatus.NOT_FOUND, request);
+        }
+    }
 
 }

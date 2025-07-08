@@ -3,10 +3,12 @@ import com.project.demo.logic.entity.rol.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -19,8 +21,14 @@ public class User implements UserDetails {
     private Long id;
     private String name;
     private String lastname;
+    private String lastname2;
     @Column(unique = true, length = 100, nullable = false)
     private String email;
+    @Column(unique = true, length = 9, nullable = false)
+    private String identification;
+    private LocalDate birthDate;
+    @Column (nullable = false, columnDefinition = "boolean default true")
+    private boolean status = true;
 
     @Column(nullable = false)
     private String password;
@@ -96,6 +104,14 @@ public class User implements UserDetails {
         this.lastname = lastname;
     }
 
+    public String getLastname2() {
+        return lastname2;
+    }
+
+    public void setLastname2(String lastname2) {
+        this.lastname2 = lastname2;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -137,5 +153,29 @@ public class User implements UserDetails {
         this.role = role;
 
         return this;
+    }
+
+    public String getIdentification() {
+        return identification;
+    }
+
+    public void setIdentification(String identification) {
+        this.identification = identification;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

@@ -15,43 +15,42 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
-    private final AuthenticationProvider authenticationProvider;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomOAuth2SuccesHandler customOAuth2SuccesHandler;
-    private final CustomOAuth2UserService customOAuth2UserService;
+        private final AuthenticationProvider authenticationProvider;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final CustomOAuth2SuccesHandler customOAuth2SuccesHandler;
+        private final CustomOAuth2UserService customOAuth2UserService;
 
-    public SecurityConfiguration(AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthenticationFilter,
-                                 CustomOAuth2SuccesHandler customOAuth2SuccesHandler,
-                                 CustomOAuth2UserService customOAuth2UserService) {
-        this.authenticationProvider = authenticationProvider;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.customOAuth2SuccesHandler = customOAuth2SuccesHandler;
-        this.customOAuth2UserService = customOAuth2UserService;
-    }
+        public SecurityConfiguration(AuthenticationProvider authenticationProvider,
+                        JwtAuthenticationFilter jwtAuthenticationFilter,
+                        CustomOAuth2SuccesHandler customOAuth2SuccesHandler,
+                        CustomOAuth2UserService customOAuth2UserService) {
+                this.authenticationProvider = authenticationProvider;
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+                this.customOAuth2SuccesHandler = customOAuth2SuccesHandler;
+                this.customOAuth2UserService = customOAuth2UserService;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/auth/google").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .oauth2Login(oauth2 -> oauth2
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf().disable()
+                                .authorizeHttpRequests((authorize) -> authorize
+                                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/auth/google").permitAll()
+                                                .requestMatchers(HttpMethod.PUT, "/auth/block").permitAll()
+                                                .anyRequest().authenticated())
+                                .sessionManagement()
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                .and()
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .oauth2Login(oauth2 -> oauth2
 
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(customOAuth2SuccesHandler)
-                );
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService))
+                                                .successHandler(customOAuth2SuccesHandler));
 
-        return http.build();
-    }
+                return http.build();
+        }
 
 }
