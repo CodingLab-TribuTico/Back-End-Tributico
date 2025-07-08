@@ -8,13 +8,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
 
 @Component
 public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -25,11 +25,14 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final RoleRepository roleRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    public CustomOAuth2SuccesHandler(JwtService jwtService, UserRepository userRepository, RoleRepository roleRepository) {
+    public CustomOAuth2SuccesHandler(JwtService jwtService, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -44,17 +47,21 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setName(oauthUser.getName());
+                    newUser.setLastname(oauthUser.getLastName());
                     newUser.setRole(roleRepository.findByName(RoleEnum.USER)
                             .orElseThrow(() -> new RuntimeException("Role USER not found")));
+                    newUser.setPassword(passwordEncoder.encode("User123"));
                     return userRepository.save(newUser);
                 });
 
         String jwtToken = jwtService.generateToken(user);
 
-        String frontendUrl = "http://localhost:4200/home";
+
+        String frontendUrl = "http://localhost:4200/login";
         String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("token", jwtToken)
-                .queryParam("user", URLEncoder.encode(user.getName(), StandardCharsets.UTF_8))
+                .queryParam("expires_in", jwtService.getExpirationTime())
+                .queryParam("email", user.getEmail())
                 .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);

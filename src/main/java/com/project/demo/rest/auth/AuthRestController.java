@@ -2,6 +2,7 @@ package com.project.demo.rest.auth;
 
 import com.project.demo.logic.entity.auth.AuthenticationService;
 import com.project.demo.logic.entity.auth.JwtService;
+import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.rol.Role;
 import com.project.demo.logic.entity.rol.RoleEnum;
 import com.project.demo.logic.entity.rol.RoleRepository;
@@ -36,7 +37,6 @@ public class AuthRestController {
     private RoleRepository roleRepository;
 
 
-
     private final AuthenticationService authenticationService;
     private final JwtService jwtService;
 
@@ -68,7 +68,7 @@ public class AuthRestController {
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
         }
-
+ 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Optional<Role> optionalRole = roleRepository.findByName(RoleEnum.USER);
 
@@ -84,5 +84,17 @@ public class AuthRestController {
     public void googleAuth(HttpServletResponse response) throws IOException {
         response.sendRedirect("/oauth2/authorization/google");
     }
+
+    @GetMapping("/me/{email}")
+    public ResponseEntity<?> getUser(@PathVariable String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+
 
 }
