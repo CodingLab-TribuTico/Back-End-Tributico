@@ -37,7 +37,7 @@ public class ElectronicBillController {
         if (search == null || search.trim().isEmpty()) {
             electronicBillPage = electronicBillRepository.findAll(pageable);
         } else {
-            electronicBillPage = electronicBillRepository.searchBills(search.trim(), pageable);
+            electronicBillPage = electronicBillRepository.searchElectronicBills(search.trim(), pageable);
         }
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());

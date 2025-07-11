@@ -1,35 +1,30 @@
 package com.project.demo.logic.entity.electronicBill;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
+import java.util.List;
+import com.project.demo.logic.entity.user.User;
+import com.project.demo.logic.entity.detailsBill.DetailsBill;
 
-@Table(name = "electronic_bill")
 @Entity
+@Table(name = "electronic_bill")
 public class ElectronicBill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @JsonProperty("invoice_Number")
-    private String invoiceNumber;
-    @JsonProperty("invoice_Date")
+    private int consecutive;
     private LocalDate issueDate;
-    private String type;
-    @Column(unique = true, length = 9, nullable = false)
-    private String identification;
-    private String name;
-    private String lastname;
-    private String lastname2;
-    @JsonProperty("taxable_Amount")
-    private Double taxableAmount; //Monto agravado
-    @JsonProperty("exempt_Amount")
-    private Double exemptAmount; //Monto exento
-    @JsonProperty("vat_Amount")
-    private Double vatAmount; // Monto IVA
-    @JsonProperty("total_Amount")
-    private Double totalAmount; // Monto total
+    private int code;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @OneToMany(mappedBy = "electronicBill", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DetailsBill> details;
+
+
 
     public ElectronicBill() {}
 
@@ -41,12 +36,12 @@ public class ElectronicBill {
         this.id = id;
     }
 
-    public String getInvoiceNumber() {
-        return invoiceNumber;
+    public int getConsecutive() {
+        return consecutive;
     }
 
-    public void setInvoiceNumber(String invoiceNumber) {
-        this.invoiceNumber = invoiceNumber;
+    public void setConsecutive(int consecutive) {
+        this.consecutive = consecutive;
     }
 
     public LocalDate getIssueDate() {
@@ -57,75 +52,29 @@ public class ElectronicBill {
         this.issueDate = issueDate;
     }
 
-    public String getType() {
-        return type;
+    public int getCode() {
+        return code;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setCode(int code) {
+        this.code = code;
     }
 
-    public String getIdentification() {
-        return identification;
+    public User getUser() {
+        return user;
     }
 
-    public void setIdentification(String identification) {
-        this.identification = identification;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public String getName() {
-        return name;
+    public List<DetailsBill> getDetails() {
+        return details;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDetails(List<DetailsBill> details) {
+        this.details = details;
     }
 
-    public String getLastname() {
-        return lastname;
-    }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
-    public String getLastname2() {
-        return lastname2;
-    }
-
-    public void setLastname2(String lastname2) {
-        this.lastname2 = lastname2;
-    }
-
-    public Double getTaxableAmount() {
-        return taxableAmount;
-    }
-
-    public void setTaxableAmount(Double taxableAmount) {
-        this.taxableAmount = taxableAmount;
-    }
-
-    public Double getExemptAmount() {
-        return exemptAmount;
-    }
-
-    public void setExemptAmount(Double exemptAmount) {
-        this.exemptAmount = exemptAmount;
-    }
-
-    public Double getVatAmount() {
-        return vatAmount;
-    }
-
-    public void setVatAmount(Double vatAmount) {
-        this.vatAmount = vatAmount;
-    }
-
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
 }

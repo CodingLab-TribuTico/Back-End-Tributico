@@ -9,8 +9,9 @@ import org.springframework.data.repository.query.Param;
 public interface ElectronicBillRepository extends JpaRepository<ElectronicBill, Long> {
 
     @Query("SELECT e FROM ElectronicBill e WHERE " +
-            "LOWER(e.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(e.lastname) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(e.identification) LIKE LOWER(CONCAT('%', :search, '%'))")
-    Page<ElectronicBill> searchBills(@Param("search") String search, Pageable pageable);
+            "CAST(e.consecutive AS string) LIKE CONCAT('%', :search, '%') OR " +
+            "CAST(e.code AS string) LIKE CONCAT('%', :search, '%') OR " +
+            "CAST(e.issueDate AS string) LIKE CONCAT('%', :search, '%')")
+    Page<ElectronicBill> searchElectronicBills(@Param("search") String search, Pageable pageable);
+
 }
