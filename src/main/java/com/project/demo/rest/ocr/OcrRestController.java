@@ -2,6 +2,7 @@ package com.project.demo.rest.ocr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.llm.LLMService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ public class OcrRestController {
     private LLMService llmService;
 
     @PostMapping
-    public ResponseEntity<?> extractText(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+    public ResponseEntity<?> extractText(@RequestParam("file") MultipartFile file, @RequestParam("type") String type, HttpServletRequest request) {
         try {
             String text;
             try (PDDocument document = PDDocument.load(file.getInputStream())) {
@@ -30,13 +31,19 @@ public class OcrRestController {
                 text = stripper.getText(document);
             }
 
-            String jsonResponse = llmService.generateInvoiceJson(text);
+
+            String jsonResponse = llmService.generateInvoiceJson(text, type);
             String cleanJson = llmService.cleanJson(jsonResponse);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode parsedJson = mapper.readTree(cleanJson);
 
-            return new GlobalResponseHandler().handleResponse("Texto extraído exitosamente", parsedJson,
+            ObjectNode resultWithType = mapper.createObjectNode();
+            resultWithType.setAll((ObjectNode) parsedJson);
+            resultWithType.put("type", type);
+
+
+            return new GlobalResponseHandler().handleResponse("Texto extraído exitosamente", resultWithType,
                     HttpStatus.OK, request);
         } catch (IOException e) {
             return new GlobalResponseHandler().handleResponse("Error al procesar el archivo PDF", e.getMessage(),

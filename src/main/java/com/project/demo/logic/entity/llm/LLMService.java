@@ -16,81 +16,91 @@ public class LLMService {
     @Autowired
     private ChatModel chatModel;
 
-    public String generateInvoiceJson(String invoice) {
+    public String generateInvoiceJson(String invoice, String type) {
         String prompt = String.format("""
-        A partir del texto OCR entre [[[ ]]], extrae y completa SOLO los campos del siguiente JSON. No incluyas explicaciones, encabezados ni comentarios. Devuelve únicamente un JSON válido y bien formado (sin texto adicional). Usa `null` si un dato no está disponible o es ilegible.
+        From the OCR text between [[[ ]]] of a Costa Rican electronic invoice of type %s, complete ONLY the fields of the following JSON. Do not add explanations, headers, or comments. Return exclusively a valid and well-formed JSON (without any additional text). Use `null` if data is unavailable or illegible.
         
-        Clasifica la factura automáticamente en el campo `"categoria"` usando una de las categorías válidas del régimen simplificado o profesional independiente. Elige la mejor categoría según el texto, entre estas:
+        If the invoice type is `"ingreso"`, include only the `receiver` (client) information.
+        If the invoice type is `"gasto"`, include only the `issuer` (supplier) information.
+        Completely omit the other field.
         
-        [
-          "servicios_profesionales", "comisiones", "venta_bienes", "intereses_recibidos",
-          "alquileres_cobrados", "otros_ingresos", "ingresos_no_gravables",
-          "alquiler_local", "servicios_publicos", "materiales_oficina", "software_licencias",
-          "publicidad", "transporte", "comunicaciones", "mantenimiento",
-          "honorarios_profesionales", "costos_servicio_terceros", "intereses_creditos",
-          "comisiones_bancarias", "depreciacion_equipos", "amortizacion",
-          "aporte_pension_voluntaria", "otros_deducibles"
-        ]
+        Automatically classify each item in the `details` field into the `"category"` key using one of the following **category codes** according to the text content:
         
-        Asegúrate de que:
-        - Todos los campos requeridos estén presentes.
-        - El JSON sea sintácticamente correcto.
-        - Los valores tengan el tipo de dato correcto.
-        - No incluyas campos adicionales fuera del esquema dado.
+        VG-B   = Venta Gravada de Bienes (13%%)
+        VG-S   = Venta Gravada de Servicios (13%%)
+        VE     = Venta Exenta (Ley u oficio)
+        VX     = Venta Exonerada (usuario final exonerado)
+        EXP    = Exportación de Bienes o Servicios  
+        CBG    = Compra de Bienes Gravados (con derecho a crédito fiscal)  
+        CSG    = Compra de Servicios Gravados (con derecho a crédito fiscal)  
+        CX     = Compra Exenta o Exonerada (sin derecho a crédito)  
+        CBR    = Compra de Bienes con Tarifa Reducida (1%%, 2%%)  
+        CSR    = Compra de Servicios con Tarifa Reducida (1%%, 2%%)  
+        GSP    = Gasto de Servicios Públicos - Gravado  
+        GA     = Gasto Administrativo - Gravado  
+        SPS    = Servicios Profesionales Subcontratados - Gravado  
+        HP     = Honorarios Profesionales - Gravado  
+        GV     = Gasto de Transporte o Viáticos - Gravado  
+        PP     = Publicidad y Promoción - Gravado  
+        ALO    = Alquiler de Local u Oficina  
+        MR     = Mantenimiento y Reparaciones - Gravado  
+        CAF    = Compra de Activos Fijos - IVA prorrateable  
+        GF     = Gasto Financiero - No lleva IVA  
+        GS     = Gasto Salarial - No lleva IVA  
+        NCE    = Notas de Crédito Emitidas  
+        NCR    = Notas de Crédito Recibidas  
+        DON    = Donación Deducible - No lleva IVA  
+        MUL    = Multas, Sanciones o Gastos No Deducibles
         
-        Formato requerido:
+        Requirements:
+        - All required fields must be present according to the invoice type.
+        - The JSON must be syntactically correct.
+        - Use correct data types.
+        - Do not include fields outside the schema.
+        - Do not include explanations, headers, or additional text.
+        - Do not touch the `type` field; it fills itself.
+        
+        Required format:
         {
-          "consecutivo": "<int>",
-          "clave": "<int>",
-          "fecha_emision": "<yyyy-mm-dd>",
+          "consecutive": <string>,
+          "key": <string>,
+          "issueDate": "<yyyy-mm-dd>",
         
-          "cliente": {
-            "nombre": "<string>",
-            "cedula": "<int>",
-            "telefono": "<string>",
+          "issuer": {
+            "name": "<string>",
+            "lastname": "<string>",
+            "identification": <int>,
+            "email": "<string>"
+          },
+          "receiver": {
+            "name": "<string>",
+            "lastname": "<string>",
+            "identification": <int>,
             "email": "<string>"
           },
         
-          "detalle": [
+          "details": [
             {
-              "cabys": "<int(13 digits)>",
-              "descripcion": "<string>",
-              "cantidad": "<float>",
-              "unidad": "<string>",
-              "precio_unitario": "<float>",
-              "descuento": "<float>",
-              "impuesto": "<float>",
-              "monto_impuesto": "<float>",
-              "total": "<float>",
-              "categoria": "<string>"
+              "cabys": <string(13 digits)>,
+              "quantity": <float>,
+              "unit": "<string>",
+              "unitPrice": <float>,
+              "discount": <float>,
+              "tax": <float>,  // Only allowed values: 13.0, 10.0, 4.0, 2.0, 1.0, or 0.0,
+              "taxAmount": <float>,
+              "category": "<string (category code)>",
+              "total": <float>,
+              "description": "<string>",
             }
-          ],
-        
-          "totales": {
-            "total_servicios_gravados": "<float>",
-            "total_servicios_exentos": "<float>",
-            "total_servicios_exonerados": "<float>",
-            "total_mercancias_gravadas": "<float>",
-            "total_mercancias_exentas": "<float>",
-            "total_mercancias_exoneradas": "<float>",
-            "total_gravado": "<float>",
-            "total_exento": "<float>",
-            "total_exonerado": "<float>",
-            "total_venta": "<float>",
-            "total_descuento": "<float>",
-            "total_venta_neta": "<float>",
-            "total_impuestos": "<float>",
-            "total_iva_devueltos": "<float>",
-            "total_otros_cargos": "<float>",
-            "total_comprobante": "<float>"
-          },
+          ]
         }
-
-        Texto OCR:
+        
+        OCR Text:
         [[[
         %s
         ]]]
-        """, invoice);
+        """, type, invoice);
+
 
         OllamaOptions options = OllamaOptions.builder()
                 .model(model)
