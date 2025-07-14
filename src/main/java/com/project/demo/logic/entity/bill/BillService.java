@@ -1,6 +1,5 @@
 package com.project.demo.logic.entity.bill;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -13,8 +12,6 @@ import java.io.InputStream;
 @Service
 public class BillService {
 
-    @Autowired
-    private BillRepository billRepository;
 
     public Bill formatAndSave(InputStream inputStream) throws Exception {
         Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream);
