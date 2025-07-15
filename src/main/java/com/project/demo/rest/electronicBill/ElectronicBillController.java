@@ -24,9 +24,13 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/electronic-bill")
 public class ElectronicBillController {
-    @Autowired ElectronicBillRepository electronicBillRepository;
-    @Autowired UserRepository userRepository;
+    @Autowired
+    ElectronicBillRepository electronicBillRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
+    /*
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     
@@ -44,6 +48,29 @@ public class ElectronicBillController {
             electronicBillPage = electronicBillRepository.searchElectronicBills(search.trim(), pageable);
         }
 
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
+        meta.setTotalPages(electronicBillPage.getTotalPages());
+        meta.setTotalElements(electronicBillPage.getTotalElements());
+        meta.setPageNumber(electronicBillPage.getNumber() + 1);
+        meta.setPageSize(electronicBillPage.getSize());
+
+        return new GlobalResponseHandler().handleResponse(
+                "Electronic recuperados exitosamente",
+                electronicBillPage.getContent(),
+                HttpStatus.OK,
+                meta
+        );
+    }
+    */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getAll(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search,
+            HttpServletRequest request) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ElectronicBill> electronicBillPage = electronicBillRepository.findAll(pageable);
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
         meta.setTotalPages(electronicBillPage.getTotalPages());
         meta.setTotalElements(electronicBillPage.getTotalElements());

@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.detailsBill;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.electronicBill.ElectronicBill;
 
@@ -19,7 +20,8 @@ public class DetailsBill {
     private double taxAmount;
     private double total;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "electronic_bill_id", nullable = false)
     private ElectronicBill electronicBill;
 

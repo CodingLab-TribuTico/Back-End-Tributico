@@ -1,6 +1,7 @@
 package com.project.demo.logic.entity.electronicBill;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -17,7 +18,7 @@ public class ElectronicBill {
     private LocalDate issueDate;
     private int code;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
