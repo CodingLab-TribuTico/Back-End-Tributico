@@ -5,6 +5,8 @@ import com.project.demo.logic.entity.electronicBill.ElectronicBill;
 import com.project.demo.logic.entity.electronicBill.ElectronicBillRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
+import com.project.demo.logic.entity.user.User;
+import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.catalina.filters.ExpiresFilter;
@@ -23,9 +25,11 @@ import java.util.Optional;
 @RequestMapping("/electronic-bill")
 public class ElectronicBillController {
     @Autowired ElectronicBillRepository electronicBillRepository;
+    @Autowired UserRepository userRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    
     public ResponseEntity<?> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -54,20 +58,45 @@ public class ElectronicBillController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<?> createElectronicBill(@RequestBody ElectronicBill electronicBill, HttpServletRequest request) {
-        ElectronicBill savedElectronicBill = electronicBillRepository.save(electronicBill);
-        return new GlobalResponseHandler().handleResponse("Factura electónica creada", savedElectronicBill, HttpStatus.CREATED, request);
-    }
-
-    @GetMapping("/{id}")
+    @PostMapping("/{userId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> getElectronicBillById(@PathVariable Long id, HttpServletRequest request) {
-        Optional<ElectronicBill> foundElectricalBill = electronicBillRepository.findById(id);
-        if (foundElectricalBill.isPresent()) {
-            return new GlobalResponseHandler().handleResponse("Factura no encontrada", foundElectricalBill.get(), HttpStatus.OK, request);
-        } else {
-            return new GlobalResponseHandler().handleResponse("Factura no encontrada" + id + "no fue encontrada",HttpStatus.NOT_FOUND, request);
+    public ResponseEntity<?> createElectronicBill(@RequestBody ElectronicBill electronicBill, @PathVariable Long userId, HttpServletRequest request) {
+        try {
+            System.out.println("DEBUG: userId recibido: " + userId);
+
+            Optional<User> foundUser = userRepository.findById(userId);
+            
+            System.out.println("DEBUG: Usuario encontrado: " + foundUser.isPresent());
+            
+            if (foundUser.isPresent()) {
+                User user = foundUser.get();
+                System.out.println("DEBUG: Usuario ID: " + user.getId());
+                System.out.println("DEBUG: Usuario identification: " + user.getIdentification());
+                
+                electronicBill.setUser(user);
+                
+                System.out.println("DEBUG: Usuario asignado a factura: " + electronicBill.getUser().getId());
+                
+                if (electronicBill.getDetails() != null) {
+                    System.out.println("DEBUG: Número de detalles: " + electronicBill.getDetails().size());
+                    electronicBill.getDetails().forEach(detail -> {
+                        detail.setElectronicBill(electronicBill);
+                        System.out.println("DEBUG: Detalle asignado: " + detail.getDetailDescription());
+                    });
+                }
+                
+                ElectronicBill savedBill = electronicBillRepository.save(electronicBill);
+                System.out.println("DEBUG: Factura guardada con ID: " + savedBill.getId());
+                
+                return new GlobalResponseHandler().handleResponse("Factura agregada", savedBill, HttpStatus.CREATED, request);
+            } else {
+                System.out.println("DEBUG: Usuario no encontrado con ID: " + userId);
+                return new GlobalResponseHandler().handleResponse("No existe el usuario", null, HttpStatus.NOT_FOUND, request);
+            }
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error completo: " + e.getMessage());
+            e.printStackTrace();
+            return new GlobalResponseHandler().handleResponse("Error al crear factura: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
 
