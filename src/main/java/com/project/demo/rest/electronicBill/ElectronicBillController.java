@@ -1,6 +1,7 @@
 package com.project.demo.rest.electronicBill;
 
 
+import com.project.demo.logic.entity.detailsBill.DetailsBillRepository;
 import com.project.demo.logic.entity.electronicBill.ElectronicBill;
 import com.project.demo.logic.entity.electronicBill.ElectronicBillRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
