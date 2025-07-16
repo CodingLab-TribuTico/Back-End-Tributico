@@ -1,4 +1,4 @@
-package com.project.demo.logic.entity.bill;
+package com.project.demo.logic.entity.xml;
 
 import jakarta.persistence.*;
 

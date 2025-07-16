@@ -32,7 +32,7 @@ public class ElectronicBillController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     
     public ResponseEntity<?> getAll(
-            @RequestParam(defaultValue = "1") int page,
+             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String search,
             HttpServletRequest request) {

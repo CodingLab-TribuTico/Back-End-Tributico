@@ -1,7 +1,9 @@
 package com.project.demo.logic.entity.detailsBill;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.electronicBill.ElectronicBill;
+
 
 @Entity
 @Table(name = "details_bill")
@@ -10,8 +12,9 @@ public class DetailsBill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int detailCode;
+    private Long detailCode;
     private String detailDescription;
+
     private double quantity;
     private double unitPrice;
     private double unit;
@@ -21,6 +24,7 @@ public class DetailsBill {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "electronic_bill_id", nullable = false)
+    @JsonIgnore
     private ElectronicBill electronicBill;
 
     public DetailsBill() {}
@@ -33,11 +37,11 @@ public class DetailsBill {
         this.id = id;
     }
 
-    public int getDetailCode() {
+    public Long getDetailCode() {
         return detailCode;
     }
 
-    public void setDetailCode(int detailCode) {
+    public void setDetailCode(Long detailCode) {
         this.detailCode = detailCode;
     }
 

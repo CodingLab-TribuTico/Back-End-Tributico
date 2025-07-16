@@ -1,4 +1,4 @@
-package com.project.demo.logic.entity.bill;
+package com.project.demo.logic.entity.xml;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

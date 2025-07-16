@@ -13,7 +13,7 @@ public class ElectronicBill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private int consecutive;
+    private Long consecutive;
     private LocalDate issueDate;
     private int code;
 
@@ -36,11 +36,11 @@ public class ElectronicBill {
         this.id = id;
     }
 
-    public int getConsecutive() {
+    public Long getConsecutive() {
         return consecutive;
     }
 
-    public void setConsecutive(int consecutive) {
+    public void setConsecutive(Long consecutive) {
         this.consecutive = consecutive;
     }
 
