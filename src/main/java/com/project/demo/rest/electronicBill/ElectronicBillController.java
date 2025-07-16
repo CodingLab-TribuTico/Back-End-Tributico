@@ -1,7 +1,5 @@
 package com.project.demo.rest.electronicBill;
 
-
-import com.project.demo.logic.entity.detailsBill.DetailsBillRepository;
 import com.project.demo.logic.entity.electronicBill.ElectronicBill;
 import com.project.demo.logic.entity.electronicBill.ElectronicBillRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
@@ -9,8 +7,6 @@ import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.apache.catalina.filters.ExpiresFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,44 +21,13 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/electronic-bill")
 public class ElectronicBillController {
+
     @Autowired
     ElectronicBillRepository electronicBillRepository;
 
     @Autowired
     UserRepository userRepository;
 
-    /*
-    @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    
-    public ResponseEntity<?> getAll(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String search,
-            HttpServletRequest request) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<ElectronicBill> electronicBillPage;
-
-        if (search == null || search.trim().isEmpty()) {
-            electronicBillPage = electronicBillRepository.findAll(pageable);
-        } else {
-            electronicBillPage = electronicBillRepository.searchElectronicBills(search.trim(), pageable);
-        }
-
-        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
-        meta.setTotalPages(electronicBillPage.getTotalPages());
-        meta.setTotalElements(electronicBillPage.getTotalElements());
-        meta.setPageNumber(electronicBillPage.getNumber() + 1);
-        meta.setPageSize(electronicBillPage.getSize());
-
-        return new GlobalResponseHandler().handleResponse(
-                "Electronic recuperados exitosamente",
-                electronicBillPage.getContent(),
-                HttpStatus.OK,
-                meta
-        );
-    }
-    */
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getAll(
@@ -130,16 +95,37 @@ public class ElectronicBillController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> updateElectronicBill(@PathVariable Long id, @RequestBody ElectronicBill electronicBill, HttpServletRequest request) {
+    public ResponseEntity<?> updateElectronicBill(
+            @PathVariable Long id,
+            @RequestBody ElectronicBill updatedBill,
+            HttpServletRequest request) {
+
         Optional<ElectronicBill> foundElectronicBill = electronicBillRepository.findById(id);
+
         if (foundElectronicBill.isPresent()) {
-            electronicBill.setId(foundElectronicBill.get().getId());
-            electronicBillRepository.save(electronicBill);
-            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", electronicBill, HttpStatus.OK, request);
+            ElectronicBill existingBill = foundElectronicBill.get();
+            existingBill.setConsecutive(updatedBill.getConsecutive());
+            existingBill.setIssueDate(updatedBill.getIssueDate());
+            existingBill.setCode(updatedBill.getCode());
+
+            if (updatedBill.getDetails() != null) {
+                existingBill.getDetails().clear();
+
+                updatedBill.getDetails().forEach(detail -> detail.setElectronicBill(existingBill));
+                existingBill.getDetails().addAll(updatedBill.getDetails());
+            }
+
+            ElectronicBill saved = electronicBillRepository.save(existingBill);
+
+            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente",
+                    saved, HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Factura no encontrada", HttpStatus.NOT_FOUND, request);
+            return new GlobalResponseHandler().handleResponse("Factura no encontrada",
+                    HttpStatus.NOT_FOUND, request);
         }
     }
+
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -147,9 +133,11 @@ public class ElectronicBillController {
         Optional<ElectronicBill> foundElectronicBill = electronicBillRepository.findById(id);
         if (foundElectronicBill.isPresent()) {
             electronicBillRepository.deleteById(id);
-            return new GlobalResponseHandler().handleResponse("Factura eliminada exitosamente", foundElectronicBill.get(), HttpStatus.OK, request);
+            return new GlobalResponseHandler().handleResponse("Factura eliminada exitosamente",
+                    foundElectronicBill.get(), HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Factura no encontrada", id, HttpStatus.NOT_FOUND, request);
+            return new GlobalResponseHandler().handleResponse("Factura no encontrada",
+                    id, HttpStatus.NOT_FOUND, request);
         }
     }
 
