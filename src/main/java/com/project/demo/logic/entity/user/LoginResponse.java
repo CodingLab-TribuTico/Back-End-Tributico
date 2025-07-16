@@ -7,6 +7,16 @@ public class LoginResponse {
 
     private long expiresIn;
 
+    private String message; // add this to LoginResponse
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public String getToken() {
         return token;
     }
