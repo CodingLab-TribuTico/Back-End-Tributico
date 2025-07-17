@@ -1,12 +1,12 @@
-package com.project.demo.logic.entity.detailsBill;
+package com.project.demo.logic.entity.detailsInvoice;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import com.project.demo.logic.entity.electronicBill.ElectronicBill;
+import com.project.demo.logic.entity.invoice.Invoice;
 
 @Entity
-@Table(name = "details_bill")
-public class DetailsBill {
+@Table(name = "details_invoice")
+public class DetailsInvoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,12 +20,12 @@ public class DetailsBill {
     private double taxAmount;
     private double total;
 
-    @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "electronic_bill_id", nullable = false)
-    private ElectronicBill electronicBill;
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private Invoice invoice;
 
-    public DetailsBill() {}
+    public DetailsInvoice() {
+    }
 
     public Long getId() {
         return id;
@@ -75,12 +75,12 @@ public class DetailsBill {
         this.unit = unit;
     }
 
-    public ElectronicBill getElectronicBill() {
-        return electronicBill;
+    public Invoice getElectronicBill() {
+        return invoice;
     }
 
-    public void setElectronicBill(ElectronicBill electronicBill) {
-        this.electronicBill = electronicBill;
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
     }
 
     public double getTax() {

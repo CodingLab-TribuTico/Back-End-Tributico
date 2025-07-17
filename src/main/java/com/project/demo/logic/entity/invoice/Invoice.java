@@ -1,4 +1,4 @@
-package com.project.demo.logic.entity.electronicBill;
+package com.project.demo.logic.entity.invoice;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -6,11 +6,11 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 import com.project.demo.logic.entity.user.User;
-import com.project.demo.logic.entity.detailsBill.DetailsBill;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 
 @Entity
-@Table(name = "electronic_bill")
-public class ElectronicBill {
+@Table(name = "inovice")
+public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,12 +22,12 @@ public class ElectronicBill {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "electronicBill", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DetailsBill> details;
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DetailsInvoice> details;
 
 
 
-    public ElectronicBill() {}
+    public Invoice() {}
 
     public Long getId() {
         return id;
@@ -69,11 +69,11 @@ public class ElectronicBill {
         this.user = user;
     }
 
-    public List<DetailsBill> getDetails() {
+    public List<DetailsInvoice> getDetails() {
         return details;
     }
 
-    public void setDetails(List<DetailsBill> details) {
+    public void setDetails(List<DetailsInvoice> details) {
         this.details = details;
     }
 
