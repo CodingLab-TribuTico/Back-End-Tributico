@@ -2,6 +2,7 @@ package com.project.demo.logic.entity.detailsInvoice;
 
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.invoice.Invoice;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "details_invoice")
@@ -10,17 +11,18 @@ public class DetailsInvoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int detailCode;
-    private String detailDescription;
+    private String cabys;
     private double quantity;
     private double unitPrice;
     private double unit;
+    private double discount;
     private double tax;
-    private double taxAmount;
+    private String detailDescription;;
     private double total;
 
     @ManyToOne
     @JoinColumn(name = "invoice_id", nullable = false)
+    @JsonBackReference
     private Invoice invoice;
 
     public DetailsInvoice() {}
@@ -31,14 +33,6 @@ public class DetailsInvoice {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public int getDetailCode() {
-        return detailCode;
-    }
-
-    public void setDetailCode(int detailCode) {
-        this.detailCode = detailCode;
     }
 
     public String getDetailDescription() {
@@ -73,7 +67,7 @@ public class DetailsInvoice {
         this.unit = unit;
     }
 
-    public Invoice getElectronicBill() {
+    public Invoice getInvoice() {
         return invoice;
     }
 
@@ -89,12 +83,17 @@ public class DetailsInvoice {
         this.tax = tax;
     }
 
-    public double getTaxAmount() {
-        return taxAmount;
+    public String getCabys() {
+        return cabys;
     }
-
-    public void setTaxAmount(double taxAmount) {
-        this.taxAmount = taxAmount;
+    public void setCabys(String cabys) {
+        this.cabys = cabys;
+    }
+    public double getDiscount() {
+        return discount;
+    }
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 
     public double getTotal() {
