@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface DetailsInvoiceRepository extends JpaRepository<DetailsInvoice, Long> {
     @Query("SELECT e FROM DetailsInvoice e WHERE " +
-            "LOWER(e.detailDescription) LIKE LOWER(CONCAT('%', :search, '%'))")
+            "LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<DetailsInvoice> searchBillsDetails(@Param("search") String search, Pageable pageable);
 
 }
