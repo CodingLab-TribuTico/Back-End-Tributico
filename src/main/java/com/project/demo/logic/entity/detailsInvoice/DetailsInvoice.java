@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.detailsInvoice;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -14,10 +15,11 @@ public class DetailsInvoice {
     private String cabys;
     private double quantity;
     private double unitPrice;
-    private double unit;
+    private String unit;
     private double discount;
     private double tax;
-    private String detailDescription;;
+    @JsonProperty("description")
+    private String description;
     private double total;
 
     @ManyToOne
@@ -35,12 +37,12 @@ public class DetailsInvoice {
         this.id = id;
     }
 
-    public String getDetailDescription() {
-        return detailDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDetailDescription(String detailDescription) {
-        this.detailDescription = detailDescription;
+    public void setDescription(String detailDescription) {
+        this.description = detailDescription;
     }
 
     public double getQuantity() {
@@ -59,11 +61,11 @@ public class DetailsInvoice {
         this.unitPrice = unitPrice;
     }
 
-    public double getUnit() {
+    public String getUnit() {
         return unit;
     }
 
-    public void setUnit(double unit) {
+    public void setUnit(String unit) {
         this.unit = unit;
     }
 

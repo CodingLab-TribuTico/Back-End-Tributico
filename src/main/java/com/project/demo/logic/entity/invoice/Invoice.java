@@ -20,6 +20,11 @@ public class Invoice {
     private LocalDate issueDate;
     @JsonProperty("key")
     private String invoiceKey;
+    private String name;
+    private String lastname;
+    private String identification;
+    private String email;
+
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -29,7 +34,37 @@ public class Invoice {
     @JsonManagedReference
     private List<DetailsInvoice> details;
 
+    public String getName() {
+        return name;
+    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getIdentification() {
+        return identification;
+    }
+
+    public void setIdentification(String identification) {
+        this.identification = identification;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public Invoice() {}
 
