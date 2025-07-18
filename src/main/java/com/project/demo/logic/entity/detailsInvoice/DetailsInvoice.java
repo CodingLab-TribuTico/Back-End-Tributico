@@ -1,8 +1,9 @@
 package com.project.demo.logic.entity.detailsInvoice;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.invoice.Invoice;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "details_invoice")
@@ -11,17 +12,20 @@ public class DetailsInvoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int detailCode;
-    private String detailDescription;
+    private String cabys;
     private double quantity;
     private double unitPrice;
-    private double unit;
+    private String unit;
+    private double discount;
     private double tax;
-    private double taxAmount;
+    @JsonProperty("description")
+    private String description;
+    private String category;
     private double total;
 
     @ManyToOne
     @JoinColumn(name = "invoice_id", nullable = false)
+    @JsonBackReference
     private Invoice invoice;
 
     public DetailsInvoice() {
@@ -35,20 +39,12 @@ public class DetailsInvoice {
         this.id = id;
     }
 
-    public int getDetailCode() {
-        return detailCode;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDetailCode(int detailCode) {
-        this.detailCode = detailCode;
-    }
-
-    public String getDetailDescription() {
-        return detailDescription;
-    }
-
-    public void setDetailDescription(String detailDescription) {
-        this.detailDescription = detailDescription;
+    public void setDescription(String detailDescription) {
+        this.description = detailDescription;
     }
 
     public double getQuantity() {
@@ -67,15 +63,23 @@ public class DetailsInvoice {
         this.unitPrice = unitPrice;
     }
 
-    public double getUnit() {
+    public String getUnit() {
         return unit;
     }
 
-    public void setUnit(double unit) {
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public Invoice getElectronicBill() {
+    public Invoice getInvoice() {
         return invoice;
     }
 
@@ -91,12 +95,17 @@ public class DetailsInvoice {
         this.tax = tax;
     }
 
-    public double getTaxAmount() {
-        return taxAmount;
+    public String getCabys() {
+        return cabys;
     }
-
-    public void setTaxAmount(double taxAmount) {
-        this.taxAmount = taxAmount;
+    public void setCabys(String cabys) {
+        this.cabys = cabys;
+    }
+    public double getDiscount() {
+        return discount;
+    }
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 
     public double getTotal() {

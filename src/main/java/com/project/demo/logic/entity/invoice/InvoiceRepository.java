@@ -10,7 +10,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @Query("SELECT e FROM Invoice e WHERE " +
             "CAST(e.consecutive AS string) LIKE CONCAT('%', :search, '%') OR " +
-            "CAST(e.code AS string) LIKE CONCAT('%', :search, '%') OR " +
+            "CAST(e.invoiceKey AS string) LIKE CONCAT('%', :search, '%') OR " +
             "CAST(e.issueDate AS string) LIKE CONCAT('%', :search, '%')")
     Page<Invoice> seacrhInovices(@Param("search") String search, Pageable pageable);
 

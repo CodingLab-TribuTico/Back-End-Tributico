@@ -1,7 +1,8 @@
 package com.project.demo.logic.entity.invoice;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -9,23 +10,61 @@ import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 
 @Entity
-@Table(name = "inovice")
+@Table(name = "invoice")
 public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String type;
     private int consecutive;
     private LocalDate issueDate;
-    private int code;
+    @JsonProperty("key")
+    private String invoiceKey;
+    private String name;
+    private String lastname;
+    private String identification;
+    private String email;
+
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<DetailsInvoice> details;
 
+    public String getName() {
+        return name;
+    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getIdentification() {
+        return identification;
+    }
+
+    public void setIdentification(String identification) {
+        this.identification = identification;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public Invoice() {}
 
@@ -53,12 +92,12 @@ public class Invoice {
         this.issueDate = issueDate;
     }
 
-    public int getCode() {
-        return code;
+    public String getInvoiceKey() {
+        return invoiceKey;
     }
 
-    public void setCode(int code) {
-        this.code = code;
+    public void setInvoiceKey(String invoiceKey) {
+        this.invoiceKey = invoiceKey;
     }
 
     public User getUser() {
@@ -77,5 +116,11 @@ public class Invoice {
         this.details = details;
     }
 
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
 
+    }
 }

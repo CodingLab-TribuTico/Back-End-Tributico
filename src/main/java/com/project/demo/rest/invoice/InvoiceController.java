@@ -35,23 +35,23 @@ public class InvoiceController {
             @RequestParam(defaultValue = "") String search,
             HttpServletRequest request) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Invoice> electronicBillPage;
+        Page<Invoice> invoicePage;
 
         if (search == null || search.trim().isEmpty()) {
-            electronicBillPage = invoiceRepository.findAll(pageable);
+            invoicePage = invoiceRepository.findAll(pageable);
         } else {
-            electronicBillPage = invoiceRepository.seacrhInovices(search.trim(), pageable);
+            invoicePage = invoiceRepository.seacrhInovices(search.trim(), pageable);
         }
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
-        meta.setTotalPages(electronicBillPage.getTotalPages());
-        meta.setTotalElements(electronicBillPage.getTotalElements());
-        meta.setPageNumber(electronicBillPage.getNumber() + 1);
-        meta.setPageSize(electronicBillPage.getSize());
+        meta.setTotalPages(invoicePage.getTotalPages());
+        meta.setTotalElements(invoicePage.getTotalElements());
+        meta.setPageNumber(invoicePage.getNumber() + 1);
+        meta.setPageSize(invoicePage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
                 "Electronic recuperados exitosamente",
-                electronicBillPage.getContent(),
+                invoicePage.getContent(),
                 HttpStatus.OK,
                 meta
         );
@@ -59,7 +59,7 @@ public class InvoiceController {
 
     @PostMapping("/{userId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> createElectronicBill(@RequestBody Invoice invoice, @PathVariable Long userId, HttpServletRequest request) {
+    public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @PathVariable Long userId, HttpServletRequest request) {
         User user = userRepository.findById(userId).orElse(null);
         invoice.setUser(user);
 
