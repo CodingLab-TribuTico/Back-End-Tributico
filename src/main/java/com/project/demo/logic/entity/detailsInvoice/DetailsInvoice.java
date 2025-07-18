@@ -20,6 +20,7 @@ public class DetailsInvoice {
     private double tax;
     @JsonProperty("description")
     private String description;
+    private String category;
     private double total;
 
     @ManyToOne
@@ -63,6 +64,14 @@ public class DetailsInvoice {
 
     public String getUnit() {
         return unit;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public void setUnit(String unit) {
