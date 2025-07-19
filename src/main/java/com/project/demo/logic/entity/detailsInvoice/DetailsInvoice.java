@@ -66,21 +66,12 @@ public class DetailsInvoice {
         return unit;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
 
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public Invoice getInvoice() {
-        return invoice;
-    }
+   
 
     public void setInvoice(Invoice invoice) {
         this.invoice = invoice;
