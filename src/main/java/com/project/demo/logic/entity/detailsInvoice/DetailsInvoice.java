@@ -21,6 +21,7 @@ public class DetailsInvoice {
     @JsonProperty("description")
     private String description;
     private String category;
+    private double taxAmount;
     private double total;
 
     @ManyToOne
@@ -67,21 +68,12 @@ public class DetailsInvoice {
         return unit;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
 
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public Invoice getInvoice() {
-        return invoice;
-    }
+   
 
     public void setInvoice(Invoice invoice) {
         this.invoice = invoice;
@@ -114,5 +106,18 @@ public class DetailsInvoice {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public double getTaxAmount() {
+        return taxAmount;
+    }
+    public void setTaxAmount(double taxAmount) {
+        this.taxAmount = taxAmount;
+    }
+    public String getCategory() {
+        return category;
+    }
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

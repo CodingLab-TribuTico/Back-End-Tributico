@@ -63,10 +63,10 @@ public class DetailsInvoiceController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> getDetailsInvoiceById(@PathVariable Long id, HttpServletRequest request) {
-        Optional<DetailsInvoice> foundDetailsInvoice = detailsInvoiceRepository.findById(id);
-        if (foundDetailsInvoice.isPresent()) {
-            return new GlobalResponseHandler().handleResponse("Detalles no encontrados", foundDetailsInvoice.get(), HttpStatus.OK, request);
+    public ResponseEntity<?> getDetailsBillById(@PathVariable Long id, HttpServletRequest request) {
+        Optional<DetailsInvoice> foundDetailsBill = detailsInvoiceRepository.findById(id);
+        if (foundDetailsBill.isPresent()) {
+            return new GlobalResponseHandler().handleResponse("Detalles no encontrados", foundDetailsBill.get(), HttpStatus.OK, request);
         } else {
             return new GlobalResponseHandler().handleResponse("Detalles no encontrados" + id + "no fue encontrada", HttpStatus.NOT_FOUND, request);
         }

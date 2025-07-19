@@ -9,9 +9,13 @@ import org.springframework.data.repository.query.Param;
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @Query("SELECT e FROM Invoice e WHERE " +
-            "CAST(e.consecutive AS string) LIKE CONCAT('%', :search, '%') OR " +
-            "CAST(e.invoiceKey AS string) LIKE CONCAT('%', :search, '%') OR " +
-            "CAST(e.issueDate AS string) LIKE CONCAT('%', :search, '%')")
-    Page<Invoice> seacrhInovices(@Param("search") String search, Pageable pageable);
+            "e.user.id = :userId AND (" +
+            "LOWER(CAST(e.id AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(CAST(e.consecutive AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(CAST(e.consecutive AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(e.user.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Invoice> searchElectronicBills(@Param("search") String search, @Param("userId") Long userId,
+                                        Pageable pageable);
 
+    Page<Invoice> findByUserId(Long userId, Pageable pageable);
 }

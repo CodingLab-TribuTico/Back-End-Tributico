@@ -15,58 +15,36 @@ public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String type;
-    private int consecutive;
+
+    @Column(nullable = false)
+    private String consecutive;
+
+    @Column(nullable = false)
     private LocalDate issueDate;
+
+    @Column(nullable = false)
+    private String type;
+
     @JsonProperty("key")
     private String invoiceKey;
-    private String name;
-    private String lastname;
-    private String identification;
-    private String email;
-
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "issuer_id")
+    private InvoiceUser issuer;
+
+    @ManyToOne
+    @JoinColumn(name = "receiver_id")
+    private InvoiceUser receiver;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private List<DetailsInvoice> details;
 
-    public String getName() {
-        return name;
+    public Invoice() {
     }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
-    public String getIdentification() {
-        return identification;
-    }
-
-    public void setIdentification(String identification) {
-        this.identification = identification;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Invoice() {}
 
     public Long getId() {
         return id;
@@ -76,11 +54,17 @@ public class Invoice {
         this.id = id;
     }
 
-    public int getConsecutive() {
+    public String  getConsecutive() {
         return consecutive;
     }
 
-    public void setConsecutive(int consecutive) {
+    public String getKey() {
+        return invoiceKey;
+    }
+    public void setKey(String key) {
+        this.invoiceKey = invoiceKey;
+    }
+    public void setConsecutive(String consecutive) {
         this.consecutive = consecutive;
     }
 
@@ -92,20 +76,28 @@ public class Invoice {
         this.issueDate = issueDate;
     }
 
-    public String getInvoiceKey() {
-        return invoiceKey;
-    }
-
-    public void setInvoiceKey(String invoiceKey) {
-        this.invoiceKey = invoiceKey;
-    }
-
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public InvoiceUser getIssuer() {
+        return issuer;
+    }
+
+    public void setIssuer(InvoiceUser issuer) {
+        this.issuer = issuer;
+    }
+
+    public InvoiceUser getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(InvoiceUser receiver) {
+        this.receiver = receiver;
     }
 
     public List<DetailsInvoice> getDetails() {
