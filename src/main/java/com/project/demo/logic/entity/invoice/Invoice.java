@@ -19,9 +19,6 @@ public class Invoice {
     @Column(nullable = false)
     private String consecutive;
 
-    @Column(nullable = false,  name = "invoice_key")
-    private String key;
-
     @Column(nullable = false)
     private LocalDate issueDate;
 
@@ -57,11 +54,17 @@ public class Invoice {
         this.id = id;
     }
 
-    public int getConsecutive() {
+    public String  getConsecutive() {
         return consecutive;
     }
 
-    public void setConsecutive(int consecutive) {
+    public String getKey() {
+        return invoiceKey;
+    }
+    public void setKey(String key) {
+        this.invoiceKey = invoiceKey;
+    }
+    public void setConsecutive(String consecutive) {
         this.consecutive = consecutive;
     }
 
@@ -71,14 +74,6 @@ public class Invoice {
 
     public void setIssueDate(LocalDate issueDate) {
         this.issueDate = issueDate;
-    }
-
-    public String getInvoiceKey() {
-        return invoiceKey;
-    }
-
-    public void setInvoiceKey(String invoiceKey) {
-        this.invoiceKey = invoiceKey;
     }
 
     public User getUser() {

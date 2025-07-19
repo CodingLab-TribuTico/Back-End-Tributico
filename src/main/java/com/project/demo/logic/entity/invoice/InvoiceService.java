@@ -110,14 +110,12 @@ public class InvoiceService {
     private DetailsInvoice buildDetailInvoice(DetailsInvoice detail, Invoice invoice) {
         DetailsInvoice newDetail = new DetailsInvoice();
         newDetail.setCabys(detail.getCabys());
-        newDetail.setDetailDescription(detail.getDetailDescription());
+        newDetail.setDescription(detail.getDescription());
         newDetail.setQuantity(detail.getQuantity());
         newDetail.setUnitPrice(detail.getUnitPrice());
         newDetail.setUnit(detail.getUnit());
         newDetail.setTax(detail.getTax());
-        newDetail.setTaxAmount(detail.getTaxAmount());
         newDetail.setTotal(detail.getTotal());
-        newDetail.setCategory(detail.getCategory());
         newDetail.setInvoice(invoice);
         return newDetail;
     }

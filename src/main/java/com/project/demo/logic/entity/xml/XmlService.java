@@ -58,7 +58,7 @@ public class XmlService {
 
                 detail.setCabys(getText(element, "Codigo"));
 
-                detail.setDetailDescription(getText(element, "Detalle"));
+                detail.setDescription(getText(element, "Detalle"));
                 detail.setQuantity(Double.parseDouble(getText(element, "Cantidad")));
                 detail.setUnitPrice(Double.parseDouble(getText(element, "PrecioUnitario")));
 
