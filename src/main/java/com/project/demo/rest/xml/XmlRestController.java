@@ -1,9 +1,7 @@
 package com.project.demo.rest.xml;
 
-import com.project.demo.logic.entity.electronicBill.ElectronicBill;
+import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
-import com.project.demo.logic.entity.xml.Bill;
-import com.project.demo.logic.entity.xml.BillRepository;
 import com.project.demo.logic.entity.xml.XmlService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,7 @@ public class XmlRestController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','USER')")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         try (InputStream inputStream = file.getInputStream()) {
-            ElectronicBill saved = xmlService.formatAndSave(inputStream);
+            Invoice saved = xmlService.formatAndSave(inputStream);
             System.out.println(saved.toString());
             return new GlobalResponseHandler().handleResponse("Procesamiento exitoso", saved, HttpStatus.OK,request);
         } catch (Exception e) {

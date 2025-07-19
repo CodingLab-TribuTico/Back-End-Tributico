@@ -1,7 +1,7 @@
 package com.project.demo.logic.entity.xml;
 
-import com.project.demo.logic.entity.detailsBill.DetailsBill;
-import com.project.demo.logic.entity.electronicBill.ElectronicBill;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
+import com.project.demo.logic.entity.invoice.Invoice;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,31 +18,28 @@ import java.util.List;
 public class XmlService {
 
 
-    public ElectronicBill formatAndSave(InputStream inputStream) throws Exception {
+    public Invoice formatAndSave(InputStream inputStream) throws Exception {
         try {
             Document document = DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder()
                     .parse(inputStream);
             document.getDocumentElement().normalize();
 
-            ElectronicBill electronicBill = new ElectronicBill();
+            Invoice invoice = new Invoice();
 
-            String consecutive = getText(document, "NumeroConsecutivo");
-            electronicBill.setConsecutive(Long.parseLong(consecutive));
+            invoice.setConsecutive(getText(document, "NumeroConsecutivo"));
 
             String issueDate = getText(document, "FechaEmision");
             if (issueDate != null && !issueDate.isEmpty()) {
                 String datePart = issueDate.split("T")[0];
-                electronicBill.setIssueDate(LocalDate.parse(datePart));
+                invoice.setIssueDate(LocalDate.parse(datePart));
             }
 
-            String code = getText(document, "CodigoActividad");
-            electronicBill.setCode(code != null && !code.isEmpty() ?
-                    Integer.parseInt(code) : 0);
+            invoice.setKey(getText(document, "CodigoActividad"));
 
-            electronicBill.setDetails(extractDetails(document));
+            invoice.setDetails(extractDetails(document));
 
-            return electronicBill;
+            return invoice;
         } catch (Exception e) {
             System.err.println("Error procesando XML: " + e.getMessage());
             e.printStackTrace();
@@ -50,24 +47,22 @@ public class XmlService {
         }
     }
 
-    private List<DetailsBill> extractDetails(Document document) {
-        List<DetailsBill> detailList = new ArrayList<>();
+    private List<DetailsInvoice> extractDetails(Document document) {
+        List<DetailsInvoice> detailList = new ArrayList<>();
         NodeList nodeList = document.getElementsByTagName("LineaDetalle");
 
         for (int i = 0; i < nodeList.getLength(); i++) {
             try {
                 Element element = (Element) nodeList.item(i);
-                DetailsBill detail = new DetailsBill();
+                DetailsInvoice detail = new DetailsInvoice();
 
-                String codigo = getText(element, "Codigo");
-                detail.setDetailCode(Long.parseLong(codigo));
+                detail.setCabys(getText(element, "Codigo"));
 
                 detail.setDetailDescription(getText(element, "Detalle"));
                 detail.setQuantity(Double.parseDouble(getText(element, "Cantidad")));
                 detail.setUnitPrice(Double.parseDouble(getText(element, "PrecioUnitario")));
 
-                String unidad = getText(element, "UnidadMedida");
-                detail.setUnit("Unid".equals(unidad) ? 1 : 0);
+                detail.setUnit(getText(element, "UnidadMedida"));
 
                 NodeList taxList = element.getElementsByTagName("Impuesto");
                 if (taxList.getLength() > 0) {

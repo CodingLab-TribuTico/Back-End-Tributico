@@ -51,6 +51,7 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
                     newUser.setRole(roleRepository.findByName(RoleEnum.USER)
                             .orElseThrow(() -> new RuntimeException("Role USER not found")));
                     newUser.setPassword(passwordEncoder.encode("User123"));
+                    newUser.setIdentification("Google_");
                     return userRepository.save(newUser);
                 });
 

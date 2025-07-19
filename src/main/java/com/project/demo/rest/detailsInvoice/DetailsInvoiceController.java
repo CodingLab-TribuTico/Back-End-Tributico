@@ -1,8 +1,8 @@
-package com.project.demo.rest.detailsBill;
+package com.project.demo.rest.detailsInvoice;
 
 
-import com.project.demo.logic.entity.detailsBill.DetailsBill;
-import com.project.demo.logic.entity.detailsBill.DetailsBillRepository;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoiceRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/details-bill")
-public class DetailsBillController {
-    @Autowired DetailsBillRepository detailsBillRepository;
+@RequestMapping("/details-invoice")
+public class DetailsInvoiceController {
+    @Autowired
+    DetailsInvoiceRepository detailsInvoiceRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -32,12 +33,12 @@ public class DetailsBillController {
             @RequestParam(defaultValue = "") String search,
             HttpServletRequest request) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<DetailsBill> detailsBillPage;
+        Page<DetailsInvoice> detailsBillPage;
 
         if (search == null || search.trim().isEmpty()) {
-            detailsBillPage = detailsBillRepository.findAll(pageable);
+            detailsBillPage = detailsInvoiceRepository.findAll(pageable);
         } else {
-            detailsBillPage = detailsBillRepository.searchBillsDetails(search.trim(), pageable);
+            detailsBillPage = detailsInvoiceRepository.searchBillsDetails(search.trim(), pageable);
         }
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
@@ -55,15 +56,15 @@ public class DetailsBillController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createDetailsBill(@RequestBody DetailsBill detailsBill, HttpServletRequest request) {
-        DetailsBill savedDetailsBill = detailsBillRepository.save(detailsBill);
-        return new GlobalResponseHandler().handleResponse("Detalles de facturas creados", savedDetailsBill, HttpStatus.CREATED, request);
+    public ResponseEntity<?> createDetailsBill(@RequestBody DetailsInvoice detailsInvoice, HttpServletRequest request) {
+        DetailsInvoice savedDetailsInvoice = detailsInvoiceRepository.save(detailsInvoice);
+        return new GlobalResponseHandler().handleResponse("Detalles de facturas creados", savedDetailsInvoice, HttpStatus.CREATED, request);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getDetailsBillById(@PathVariable Long id, HttpServletRequest request) {
-        Optional<DetailsBill> foundDetailsBill = detailsBillRepository.findById(id);
+        Optional<DetailsInvoice> foundDetailsBill = detailsInvoiceRepository.findById(id);
         if (foundDetailsBill.isPresent()) {
             return new GlobalResponseHandler().handleResponse("Detalles no encontrados", foundDetailsBill.get(), HttpStatus.OK, request);
         } else {
@@ -73,12 +74,12 @@ public class DetailsBillController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> updateDetailsBill(@PathVariable Long id, @RequestBody DetailsBill detailsBill, HttpServletRequest request) {
-        Optional<DetailsBill> foundDetailsBill = detailsBillRepository.findById(id);
+    public ResponseEntity<?> updateDetailsBill(@PathVariable Long id, @RequestBody DetailsInvoice detailsInvoice, HttpServletRequest request) {
+        Optional<DetailsInvoice> foundDetailsBill = detailsInvoiceRepository.findById(id);
         if (foundDetailsBill.isPresent()) {
-            detailsBill.setId(foundDetailsBill.get().getId());
-            detailsBillRepository.save(detailsBill);
-            return new GlobalResponseHandler().handleResponse("Detalles actualizados exitosamente", detailsBill, HttpStatus.OK, request);
+            detailsInvoice.setId(foundDetailsBill.get().getId());
+            detailsInvoiceRepository.save(detailsInvoice);
+            return new GlobalResponseHandler().handleResponse("Detalles actualizados exitosamente", detailsInvoice, HttpStatus.OK, request);
         } else {
             return new GlobalResponseHandler().handleResponse("Detalles no encontrados", HttpStatus.NOT_FOUND, request);
         }
@@ -87,9 +88,9 @@ public class DetailsBillController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> deleteDetailsBill(@PathVariable Long id, HttpServletRequest request) {
-        Optional<DetailsBill> foundDetailsBill = detailsBillRepository.findById(id);
+        Optional<DetailsInvoice> foundDetailsBill = detailsInvoiceRepository.findById(id);
         if (foundDetailsBill.isPresent()) {
-            detailsBillRepository.deleteById(id);
+            detailsInvoiceRepository.deleteById(id);
             return new GlobalResponseHandler().handleResponse("Detalles eliminados exitosamente", foundDetailsBill.get(), HttpStatus.OK, request);
         } else {
             return new GlobalResponseHandler().handleResponse("Detalles no encontrados", id, HttpStatus.NOT_FOUND, request);

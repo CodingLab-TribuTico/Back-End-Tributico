@@ -1,33 +1,35 @@
-package com.project.demo.logic.entity.detailsBill;
+package com.project.demo.logic.entity.detailsInvoice;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import com.project.demo.logic.entity.electronicBill.ElectronicBill;
+import com.project.demo.logic.entity.invoice.Invoice;
 
 
 @Entity
-@Table(name = "details_bill")
-public class DetailsBill {
+@Table(name = "details_invoice")
+public class DetailsInvoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long detailCode;
+    private String cabys;
     private String detailDescription;
 
     private double quantity;
     private double unitPrice;
-    private double unit;
+    private String unit;
     private double tax;
     private double taxAmount;
     private double total;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "electronic_bill_id", nullable = false)
-    @JsonIgnore
-    private ElectronicBill electronicBill;
+    private String category;
 
-    public DetailsBill() {}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id", nullable = false)
+    @JsonIgnore
+    private Invoice invoice;
+
+    public DetailsInvoice() {}
 
     public Long getId() {
         return id;
@@ -37,12 +39,12 @@ public class DetailsBill {
         this.id = id;
     }
 
-    public Long getDetailCode() {
-        return detailCode;
+    public String getCabys() {
+        return cabys;
     }
 
-    public void setDetailCode(Long detailCode) {
-        this.detailCode = detailCode;
+    public void setCabys(String cabys) {
+        this.cabys = cabys;
     }
 
     public String getDetailDescription() {
@@ -69,20 +71,12 @@ public class DetailsBill {
         this.unitPrice = unitPrice;
     }
 
-    public double getUnit() {
+    public String getUnit() {
         return unit;
     }
 
-    public void setUnit(double unit) {
+    public void setUnit(String unit) {
         this.unit = unit;
-    }
-
-    public ElectronicBill getElectronicBill() {
-        return electronicBill;
-    }
-
-    public void setElectronicBill(ElectronicBill electronicBill) {
-        this.electronicBill = electronicBill;
     }
 
     public double getTax() {
@@ -107,5 +101,21 @@ public class DetailsBill {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Invoice getInvoice() {
+        return invoice;
+    }
+
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
     }
 }
