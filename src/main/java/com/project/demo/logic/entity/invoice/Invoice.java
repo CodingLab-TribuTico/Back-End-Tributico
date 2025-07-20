@@ -41,10 +41,9 @@ public class Invoice {
     private InvoiceUser receiver;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<DetailsInvoice> details;
 
-    public Invoice() {
-    }
 
     public Long getId() {
         return id;

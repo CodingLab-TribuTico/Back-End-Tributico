@@ -19,7 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -27,6 +27,7 @@ import java.util.Optional;
 public class InvoiceController {
     @Autowired
     InvoiceRepository invoiceRepository;
+
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -108,5 +109,11 @@ public class InvoiceController {
         }
     }
 
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getInvoiceByUserId(@PathVariable Long userId, HttpServletRequest request) {
+        List<Invoice> invoices = invoiceRepository.findByUserId(userId);
 
+        return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK, request);
+    }
 }
