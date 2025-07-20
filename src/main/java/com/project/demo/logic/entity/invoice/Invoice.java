@@ -57,12 +57,14 @@ public class Invoice {
         return consecutive;
     }
 
-    public String getKey() {
+    public String getInvoiceKey() {
         return invoiceKey;
     }
-    public void setKey(String key) {
+
+    public void setInvoiceKey(String invoiceKey) {
         this.invoiceKey = invoiceKey;
     }
+
     public void setConsecutive(String consecutive) {
         this.consecutive = consecutive;
     }

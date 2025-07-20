@@ -35,7 +35,7 @@ public class XmlService {
                 invoice.setIssueDate(LocalDate.parse(datePart));
             }
 
-            invoice.setKey(getText(document, "CodigoActividad"));
+            invoice.setInvoiceKey(getText(document, "CodigoActividad"));
 
             invoice.setDetails(extractDetails(document));
 
