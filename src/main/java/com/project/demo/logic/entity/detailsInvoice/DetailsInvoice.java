@@ -20,8 +20,9 @@ public class DetailsInvoice {
     private double tax;
     @JsonProperty("description")
     private String description;
-    private double total;
     private String category;
+    private double taxAmount;
+    private double total;
 
     @ManyToOne
     @JoinColumn(name = "invoice_id", nullable = false)
@@ -107,10 +108,15 @@ public class DetailsInvoice {
         this.total = total;
     }
 
+    public double getTaxAmount() {
+        return taxAmount;
+    }
+    public void setTaxAmount(double taxAmount) {
+        this.taxAmount = taxAmount;
+    }
     public String getCategory() {
         return category;
     }
-
     public void setCategory(String category) {
         this.category = category;
     }

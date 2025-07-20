@@ -1,8 +1,9 @@
 package com.project.demo.rest.invoice;
 
 
-import com.project.demo.logic.entity.invoice.Invoice;
-import com.project.demo.logic.entity.invoice.InvoiceRepository;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoiceRepository;
+import com.project.demo.logic.entity.invoice.*;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.user.User;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +30,12 @@ public class InvoiceController {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    DetailsInvoiceRepository detailsInvoiceRepository;
+    @Autowired
+    InvoiceUserRepository invoiceUserRepository;
+    @Autowired
+    InvoiceService  invoiceService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -35,42 +43,45 @@ public class InvoiceController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String search,
+            @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Invoice> invoicePage;
+        Page<Invoice> electronicBillPage;
 
         if (search == null || search.trim().isEmpty()) {
-            invoicePage = invoiceRepository.findAll(pageable);
+            electronicBillPage = invoiceRepository.findByUserId(userPrincipal.getId(), pageable);
         } else {
-            invoicePage = invoiceRepository.seacrhInovices(search.trim(), pageable);
+            electronicBillPage = invoiceRepository.searchElectronicBills(search.trim(), userPrincipal.getId(), pageable);
         }
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
-        meta.setTotalPages(invoicePage.getTotalPages());
-        meta.setTotalElements(invoicePage.getTotalElements());
-        meta.setPageNumber(invoicePage.getNumber() + 1);
-        meta.setPageSize(invoicePage.getSize());
+        meta.setTotalPages(electronicBillPage.getTotalPages());
+        meta.setTotalElements(electronicBillPage.getTotalElements());
+        meta.setPageNumber(electronicBillPage.getNumber() + 1);
+        meta.setPageSize(electronicBillPage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
-                "Facturas recuperadas exitosamente",
-                invoicePage.getContent(),
+                "Electronic recuperados exitosamente",
+                electronicBillPage.getContent(),
                 HttpStatus.OK,
                 meta
         );
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @PathVariable Long userId, HttpServletRequest request) {
-        User user = userRepository.findById(userId).orElse(null);
-        invoice.setUser(user);
+    public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @AuthenticationPrincipal User userPrincipal,
+                                           HttpServletRequest request) {
+        try {
+            Invoice savedInvoice = invoiceService.saveInvoice(invoice,userPrincipal.getId());
 
-        if (invoice.getDetails() != null) {
-            invoice.getDetails().forEach(detail -> detail.setInvoice(invoice));
+            return new GlobalResponseHandler().handleResponse("Factura creada exitosamente",
+                    savedInvoice,HttpStatus.CREATED, request);
+
+        }catch (Exception e){
+            return new GlobalResponseHandler().handleResponse("Error al crear factura: "+ e.getMessage(),
+                    null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
-
-        Invoice savedInvoice = invoiceRepository.save(invoice);
-        return new GlobalResponseHandler().handleResponse("Factura agregada", savedInvoice, HttpStatus.CREATED, request);
     }
 
     @PutMapping("/{id}")
@@ -106,4 +117,3 @@ public class InvoiceController {
         return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK, request);
     }
 }
-
