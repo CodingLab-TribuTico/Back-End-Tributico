@@ -42,7 +42,7 @@ public class InvoiceService {
         Invoice newInvoice = new Invoice();
         newInvoice.setUser(user);
         newInvoice.setConsecutive(invoice.getConsecutive());
-        newInvoice.setKey(invoice.getKey());
+        newInvoice.setInvoiceKey(invoice.getInvoiceKey());
         newInvoice.setIssueDate(invoice.getIssueDate());
         newInvoice.setType(invoice.getType());
         return newInvoice;
@@ -116,6 +116,7 @@ public class InvoiceService {
         newDetail.setUnit(detail.getUnit());
         newDetail.setTax(detail.getTax());
         newDetail.setTotal(detail.getTotal());
+        newDetail.setCategory(detail.getCategory());
         newDetail.setInvoice(invoice);
         return newDetail;
     }
