@@ -40,7 +40,7 @@ public class Invoice {
     @JoinColumn(name = "receiver_id")
     private InvoiceUser receiver;
 
-    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<DetailsInvoice> details;
 
     public Invoice() {

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/invoice")
+@RequestMapping("/invoices")
 public class InvoiceController {
     @Autowired
     InvoiceRepository invoiceRepository;
@@ -82,7 +82,7 @@ public class InvoiceController {
                     null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
-
+    /*
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> updateInvoice(@PathVariable Long id, @RequestBody Invoice invoice, HttpServletRequest request) {
@@ -95,6 +95,23 @@ public class InvoiceController {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", HttpStatus.NOT_FOUND, request);
         }
     }
+    */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> updateInvoice(@PathVariable Long id, @RequestBody Invoice invoice,
+                                           @AuthenticationPrincipal User userPrincipal,
+                                           HttpServletRequest request) {
+        try {
+            Invoice updatedInvoice = invoiceService.updateInvoice(id, invoice, userPrincipal.getId());
+            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente",
+                    updatedInvoice, HttpStatus.OK, request);
+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Error al actualizar factura: " + e.getMessage(),
+                    null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -107,6 +124,5 @@ public class InvoiceController {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", id, HttpStatus.NOT_FOUND, request);
         }
     }
-
 
 }
