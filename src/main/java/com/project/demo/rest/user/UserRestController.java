@@ -61,7 +61,7 @@ public class UserRestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'USER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> addUser(@RequestBody User user, HttpServletRequest request) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
@@ -70,34 +70,49 @@ public class UserRestController {
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User user, HttpServletRequest request) {
         Optional<User> foundUser = userRepository.findById(userId);
-        if(foundUser.isPresent()) {
-            user.setId(foundUser.get().getId());
-            user.setName(user.getName());
-            user.setLastname(user.getLastname());
-            user.setLastname2(user.getLastname2());
-            user.setEmail(user.getEmail());
 
-            if(user.getPassword() == null || user.getPassword().isEmpty()) {
-                user.setPassword(foundUser.get().getPassword());
-            } else {
-                user.setPassword(passwordEncoder.encode(user.getPassword()));
-            }
-            
-            user.setRole(foundUser.get().getRole());
-            userRepository.save(user);
-            return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
-                    user, HttpStatus.OK, request);
-        } else {
-            return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado"  ,
+        if (foundUser.isEmpty()) {
+            return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado",
                     HttpStatus.NOT_FOUND, request);
         }
+
+        Optional<User> userByEmail = userRepository.findByEmail(user.getEmail());
+        if (userByEmail.isPresent() && !userByEmail.get().getId().equals(userId)) {
+            return new GlobalResponseHandler().handleResponse("El correo electrónico ya está en uso por otro usuario",
+                    HttpStatus.CONFLICT, request);
+        }
+
+        Optional<User> userByCedula = userRepository.findByIdentification(user.getIdentification());
+        if (userByCedula.isPresent() && !userByCedula.get().getId().equals(userId)) {
+            return new GlobalResponseHandler().handleResponse("La cédula ya está en uso por otro usuario",
+                    HttpStatus.CONFLICT, request);
+        }
+
+        User existingUser = foundUser.get();
+        existingUser.setName(user.getName());
+        existingUser.setLastname(user.getLastname());
+        existingUser.setLastname2(user.getLastname2());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setIdentification(user.getIdentification());
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            existingUser.setPassword(existingUser.getPassword());
+        } else {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        existingUser.setRole(existingUser.getRole());
+
+        userRepository.save(existingUser);
+        return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
+                existingUser, HttpStatus.OK, request);
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId, HttpServletRequest request) {
         Optional<User> foundOrder = userRepository.findById(userId);
         if(foundOrder.isPresent()) {
@@ -114,37 +129,53 @@ public class UserRestController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateUserPatch(@PathVariable Long userId, @RequestBody User user, HttpServletRequest request) {
         Optional<User> foundUser = userRepository.findById(userId);
-        if(foundUser.isPresent()) {
-            User existingUser = foundUser.get();
-            if (user.getName() != null) {
-                existingUser.setName(user.getName());
-            }
-            if (user.getLastname() != null) {
-                existingUser.setLastname(user.getLastname());
-            }
-            if (user.getLastname2() != null) {
-                existingUser.setLastname2(user.getLastname2());
-            }
-            if (user.getEmail() != null) {
-                existingUser.setEmail(user.getEmail());
-            }
-            if (user.getIdentification() != null) {
-                existingUser.setIdentification(user.getIdentification());
-            }
-            if (user.getBirthDate() != null) {
-                existingUser.setBirthDate(user.getBirthDate());
-            }
-            if (user.getPassword() != null) {
-                existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-            }
-            userRepository.save(existingUser);
-            return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
-                    existingUser, HttpStatus.OK, request);
-        } else {
+        if (foundUser.isEmpty()) {
             return new GlobalResponseHandler().handleResponse("Usuario " + userId + " no encontrado",
                     HttpStatus.NOT_FOUND, request);
         }
+
+        User existingUser = foundUser.get();
+
+        if (user.getEmail() != null) {
+            Optional<User> userByEmail = userRepository.findByEmail(user.getEmail());
+            if (userByEmail.isPresent() && !userByEmail.get().getId().equals(userId)) {
+                return new GlobalResponseHandler().handleResponse("El correo electrónico ya está en uso por otro usuario",
+                        HttpStatus.CONFLICT, request);
+            }
+            existingUser.setEmail(user.getEmail());
+        }
+
+        if (user.getIdentification() != null) {
+            Optional<User> userByIdentification = userRepository.findByIdentification(user.getIdentification());
+            if (userByIdentification.isPresent() && !userByIdentification.get().getId().equals(userId)) {
+                return new GlobalResponseHandler().handleResponse("La cédula ya está en uso por otro usuario",
+                        HttpStatus.CONFLICT, request);
+            }
+            existingUser.setIdentification(user.getIdentification());
+        }
+
+        if (user.getName() != null) {
+            existingUser.setName(user.getName());
+        }
+        if (user.getLastname() != null) {
+            existingUser.setLastname(user.getLastname());
+        }
+        if (user.getLastname2() != null) {
+            existingUser.setLastname2(user.getLastname2());
+        }
+        if (user.getBirthDate() != null) {
+            existingUser.setBirthDate(user.getBirthDate());
+        }
+        if (user.getPassword() != null) {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        userRepository.save(existingUser);
+
+        return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
+                existingUser, HttpStatus.OK, request);
     }
+
 
     @PatchMapping("/change-password/{id}")
     @PreAuthorize("isAuthenticated()")
