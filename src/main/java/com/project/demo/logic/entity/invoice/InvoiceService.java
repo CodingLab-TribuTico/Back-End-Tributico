@@ -110,7 +110,7 @@ public class InvoiceService {
     private DetailsInvoice buildDetailInvoice(DetailsInvoice detail, Invoice invoice) {
         DetailsInvoice newDetail = new DetailsInvoice();
         newDetail.setCabys(detail.getCabys());
-        newDetail.setDetailDescription(detail.getDetailDescription());
+        newDetail.setDescription(detail.getDescription());
         newDetail.setQuantity(detail.getQuantity());
         newDetail.setUnitPrice(detail.getUnitPrice());
         newDetail.setUnit(detail.getUnit());

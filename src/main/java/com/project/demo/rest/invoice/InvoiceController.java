@@ -67,6 +67,17 @@ public class InvoiceController {
         );
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getInvoiceById(@PathVariable Long id, HttpServletRequest request) {
+        Optional<Invoice> invoice = invoiceRepository.findById(id);
+        if (invoice.isPresent()) {
+            return new GlobalResponseHandler().handleResponse("Factura encontrada",invoice,HttpStatus.OK, request);
+        }
+
+        return new GlobalResponseHandler().handleResponse("Factura no encontrada",null,HttpStatus.NOT_FOUND, request);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @AuthenticationPrincipal User userPrincipal,

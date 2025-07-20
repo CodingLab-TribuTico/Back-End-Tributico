@@ -2,6 +2,7 @@ package com.project.demo.logic.entity.xml;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.invoice.Invoice;
+import com.project.demo.logic.entity.invoice.InvoiceUser;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -29,13 +30,27 @@ public class XmlService {
 
             invoice.setConsecutive(getText(document, "NumeroConsecutivo"));
 
+            invoice.setKey(getText(document, "Clave"));
+
             String issueDate = getText(document, "FechaEmision");
             if (issueDate != null && !issueDate.isEmpty()) {
                 String datePart = issueDate.split("T")[0];
                 invoice.setIssueDate(LocalDate.parse(datePart));
             }
 
-            invoice.setKey(getText(document, "CodigoActividad"));
+            Element emisorElement = (Element) document.getElementsByTagName("Emisor").item(0);
+            InvoiceUser issuer = new InvoiceUser();
+            issuer.setName(getText(emisorElement, "Nombre"));
+            issuer.setIdentification(getText(emisorElement, "Identificacion","Numero"));
+            issuer.setEmail(getText(emisorElement, "CorreoElectronico"));
+            invoice.setIssuer(issuer);
+
+            Element receptorElement = (Element) document.getElementsByTagName("Receptor").item(0);
+            InvoiceUser receiver = new InvoiceUser();
+            receiver.setName(getText(receptorElement, "Nombre"));
+            receiver.setIdentification(getText(receptorElement, "Identificacion","Numero"));
+            receiver.setEmail(getText(receptorElement, "CorreoElectronico"));
+            invoice.setReceiver(receiver);
 
             invoice.setDetails(extractDetails(document));
 
@@ -58,7 +73,7 @@ public class XmlService {
 
                 detail.setCabys(getText(element, "Codigo"));
 
-                detail.setDetailDescription(getText(element, "Detalle"));
+                detail.setDescription(getText(element, "Detalle"));
                 detail.setQuantity(Double.parseDouble(getText(element, "Cantidad")));
                 detail.setUnitPrice(Double.parseDouble(getText(element, "PrecioUnitario")));
 
@@ -90,6 +105,16 @@ public class XmlService {
     private String getText(Element parent, String childTag) {
         NodeList children = parent.getElementsByTagName(childTag);
         return (children.getLength() > 0) ? children.item(0).getTextContent().trim() : null;
+    }
+
+    private String getText(Element parent, String childTag, String grandchildTag) {
+        NodeList children = parent.getElementsByTagName(childTag);
+        if (children.getLength() > 0) {
+            Element child = (Element) children.item(0);
+            NodeList grandchildren = child.getElementsByTagName(grandchildTag);
+            return (grandchildren.getLength() > 0) ? grandchildren.item(0).getTextContent().trim() : null;
+        }
+        return null;
     }
 
 }
