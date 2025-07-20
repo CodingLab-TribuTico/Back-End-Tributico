@@ -10,5 +10,4 @@ public interface DetailsInvoiceRepository extends JpaRepository<DetailsInvoice, 
     @Query("SELECT e FROM DetailsInvoice e WHERE " +
             "LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<DetailsInvoice> searchBillsDetails(@Param("search") String search, Pageable pageable);
-
 }

@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -24,11 +25,12 @@ import java.util.Optional;
 public class InvoiceController {
     @Autowired
     InvoiceRepository invoiceRepository;
-    @Autowired UserRepository userRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    
     public ResponseEntity<?> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -50,7 +52,7 @@ public class InvoiceController {
         meta.setPageSize(invoicePage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
-                "Electronic recuperados exitosamente",
+                "Facturas recuperadas exitosamente",
                 invoicePage.getContent(),
                 HttpStatus.OK,
                 meta
@@ -96,5 +98,12 @@ public class InvoiceController {
         }
     }
 
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getInvoiceByUserId(@PathVariable Long userId, HttpServletRequest request) {
+        List<Invoice> invoices = invoiceRepository.findByUserId(userId);
 
+        return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK, request);
+    }
 }
+

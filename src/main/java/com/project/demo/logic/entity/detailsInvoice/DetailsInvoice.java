@@ -21,6 +21,7 @@ public class DetailsInvoice {
     @JsonProperty("description")
     private String description;
     private double total;
+    private String category;
 
     @ManyToOne
     @JoinColumn(name = "invoice_id", nullable = false)
@@ -104,5 +105,13 @@ public class DetailsInvoice {
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }
