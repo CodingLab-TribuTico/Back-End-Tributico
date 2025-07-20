@@ -13,6 +13,8 @@ public class DetailsInvoice {
     private Long id;
 
     private String cabys;
+    private String description;
+
     private double quantity;
     private double unitPrice;
     private String unit;
@@ -46,9 +48,15 @@ public class DetailsInvoice {
 
     public void setDescription(String detailDescription) {
         this.description = detailDescription;
+
+    public String getDescription() {
+        return description;
     }
 
-    public double getQuantity() {
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
         return quantity;
     }
 

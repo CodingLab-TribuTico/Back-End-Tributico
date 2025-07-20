@@ -25,7 +25,7 @@ public class XmlRestController {
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         try (InputStream inputStream = file.getInputStream()) {
             Invoice saved = xmlService.formatAndSave(inputStream);
-            System.out.println(saved.toString());
+            System.out.println("Escaneco de ml realizado con exito"+saved.toString());
             return new GlobalResponseHandler().handleResponse("Procesamiento exitoso", saved, HttpStatus.OK,request);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
