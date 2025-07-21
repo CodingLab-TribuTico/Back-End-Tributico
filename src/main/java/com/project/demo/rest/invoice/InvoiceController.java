@@ -1,6 +1,5 @@
 package com.project.demo.rest.invoice;
 
-
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoiceRepository;
 import com.project.demo.logic.entity.invoice.*;
@@ -19,7 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -27,6 +26,7 @@ import java.util.Optional;
 public class InvoiceController {
     @Autowired
     InvoiceRepository invoiceRepository;
+
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -34,7 +34,7 @@ public class InvoiceController {
     @Autowired
     InvoiceUserRepository invoiceUserRepository;
     @Autowired
-    InvoiceService  invoiceService;
+    InvoiceService invoiceService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -50,7 +50,8 @@ public class InvoiceController {
         if (search == null || search.trim().isEmpty()) {
             electronicBillPage = invoiceRepository.findByUserId(userPrincipal.getId(), pageable);
         } else {
-            electronicBillPage = invoiceRepository.searchElectronicBills(search.trim(), userPrincipal.getId(), pageable);
+            electronicBillPage = invoiceRepository.searchElectronicBills(search.trim(), userPrincipal.getId(),
+                    pageable);
         }
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
@@ -60,25 +61,24 @@ public class InvoiceController {
         meta.setPageSize(electronicBillPage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
-                "Electronic recuperados exitosamente",
+                "Facturas recuperadas exitosamente",
                 electronicBillPage.getContent(),
                 HttpStatus.OK,
-                meta
-        );
+                meta);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @AuthenticationPrincipal User userPrincipal,
-                                           HttpServletRequest request) {
+            HttpServletRequest request) {
         try {
-            Invoice savedInvoice = invoiceService.saveInvoice(invoice,userPrincipal.getId());
+            Invoice savedInvoice = invoiceService.saveInvoice(invoice, userPrincipal.getId());
 
             return new GlobalResponseHandler().handleResponse("Factura creada exitosamente",
-                    savedInvoice,HttpStatus.CREATED, request);
+                    savedInvoice, HttpStatus.CREATED, request);
 
-        }catch (Exception e){
-            return new GlobalResponseHandler().handleResponse("Error al crear factura: "+ e.getMessage(),
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Error al crear factura: " + e.getMessage(),
                     null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
@@ -89,18 +89,17 @@ public class InvoiceController {
             @PathVariable Long id,
             @RequestBody Invoice invoice,
             @AuthenticationPrincipal User user,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
         if (foundInvoice.isPresent()) {
             invoice.setId(id);
             Invoice updated = invoiceService.saveInvoice(invoice, user.getId());
-            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", updated, HttpStatus.OK, request);
+            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", updated,
+                    HttpStatus.OK, request);
         } else {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", HttpStatus.NOT_FOUND, request);
         }
     }
-
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -108,10 +107,20 @@ public class InvoiceController {
         Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
         if (foundInvoice.isPresent()) {
             invoiceRepository.deleteById(id);
-            return new GlobalResponseHandler().handleResponse("Factura eliminada exitosamente", foundInvoice.get(), HttpStatus.OK, request);
+            return new GlobalResponseHandler().handleResponse("Factura eliminada exitosamente", foundInvoice.get(),
+                    HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Factura no encontrada", id, HttpStatus.NOT_FOUND, request);
+            return new GlobalResponseHandler().handleResponse("Factura no encontrada", id, HttpStatus.NOT_FOUND,
+                    request);
         }
     }
 
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getInvoiceByUserId(@PathVariable Long userId, HttpServletRequest request) {
+        List<Invoice> invoices = invoiceRepository.findByUserId(userId);
+
+        return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK,
+                request);
+    }
 }

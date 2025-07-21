@@ -83,6 +83,9 @@ public class DetailsInvoice {
     public double getDiscount() {
         return discount;
     }
+    public Invoice getInvoice() {
+        return invoice;
+    }
 
     public void setDiscount(double discount) {
         this.discount = discount;

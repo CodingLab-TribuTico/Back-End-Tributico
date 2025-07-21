@@ -14,10 +14,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Service
 public class XmlService {
-
 
     public Invoice formatAndSave(InputStream inputStream) throws Exception {
         try {
@@ -41,16 +39,17 @@ public class XmlService {
             Element emisorElement = (Element) document.getElementsByTagName("Emisor").item(0);
             InvoiceUser issuer = new InvoiceUser();
             issuer.setName(getText(emisorElement, "Nombre"));
-            issuer.setIdentification(getText(emisorElement, "Identificacion","Numero"));
+            issuer.setIdentification(getText(emisorElement, "Identificacion", "Numero"));
             issuer.setEmail(getText(emisorElement, "CorreoElectronico"));
             invoice.setIssuer(issuer);
 
             Element receptorElement = (Element) document.getElementsByTagName("Receptor").item(0);
             InvoiceUser receiver = new InvoiceUser();
             receiver.setName(getText(receptorElement, "Nombre"));
-            receiver.setIdentification(getText(receptorElement, "Identificacion","Numero"));
+            receiver.setIdentification(getText(receptorElement, "Identificacion", "Numero"));
             receiver.setEmail(getText(receptorElement, "CorreoElectronico"));
             invoice.setReceiver(receiver);
+            invoice.setInvoiceKey(getText(document, "CodigoActividad"));
 
             invoice.setDetails(extractDetails(document));
 
