@@ -66,16 +66,17 @@ public class IsrSimulationController {
         for (Invoice invoice : invoices) {
             for (DetailsInvoice detail : invoice.getDetails()) {
                 String category = detail.getCategory();
+                double netIncome = detail.getTotal()-detail.getTaxAmount();
 
                 switch (category) {
-                    case "VG-B" -> salesRevenue += detail.getTotal();
-                    case "VG-S" -> professionalFees += detail.getTotal();
-                    case "ALO" -> rents += detail.getTotal();
-                    case "EXP", "VE" -> otherIncome += detail.getTotal();
-                    case "VX" -> nonTaxableIncome += detail.getTotal();
-                    case "CBG", "CBR" -> purchases += detail.getTotal();
-                    case "CAF" -> fixedAssets += detail.getTotal();
-                    case "GA", "GSP", "GV", "PP", "MR", "HP", "SPS" -> adminExpenses += detail.getTotal();
+                    case "VG-B" -> salesRevenue += netIncome;
+                    case "VG-S" -> professionalFees += netIncome;
+                    case "ALO" -> rents += netIncome;
+                    case "EXP", "VE" -> otherIncome += netIncome;
+                    case "VX" -> nonTaxableIncome += netIncome;
+                    case "CBG", "CBR" -> purchases += netIncome;
+                    case "CAF" -> fixedAssets += netIncome;
+                    case "GA", "GSP", "GV", "PP", "MR", "HP", "SPS" -> adminExpenses += netIncome;
                 }
             }
         }

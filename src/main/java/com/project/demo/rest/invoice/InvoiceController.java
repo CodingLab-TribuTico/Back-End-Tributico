@@ -61,7 +61,7 @@ public class InvoiceController {
         meta.setPageSize(electronicBillPage.getSize());
 
         return new GlobalResponseHandler().handleResponse(
-                "Electronic recuperados exitosamente",
+                "Facturas recuperadas exitosamente",
                 electronicBillPage.getContent(),
                 HttpStatus.OK,
                 meta
