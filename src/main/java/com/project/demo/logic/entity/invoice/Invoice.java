@@ -41,10 +41,9 @@ public class Invoice {
     private InvoiceUser receiver;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<DetailsInvoice> details;
 
-    public Invoice() {
-    }
 
     public Long getId() {
         return id;
@@ -58,12 +57,14 @@ public class Invoice {
         return consecutive;
     }
 
-    public String getKey() {
+    public String getInvoiceKey() {
         return invoiceKey;
     }
-    public void setKey(String key) {
+
+    public void setInvoiceKey(String invoiceKey) {
         this.invoiceKey = invoiceKey;
     }
+
     public void setConsecutive(String consecutive) {
         this.consecutive = consecutive;
     }

@@ -67,12 +67,13 @@ public class DetailsInvoice {
         return unit;
     }
 
-
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-   
+    public Invoice getInvoice() {
+        return invoice;
+    }
 
     public void setInvoice(Invoice invoice) {
         this.invoice = invoice;
