@@ -113,8 +113,10 @@ public class InvoiceService {
         newDetail.setDescription(detail.getDescription());
         newDetail.setQuantity(detail.getQuantity());
         newDetail.setUnitPrice(detail.getUnitPrice());
+        newDetail.setDiscount(detail.getDiscount());
         newDetail.setUnit(detail.getUnit());
         newDetail.setTax(detail.getTax());
+        newDetail.setTaxAmount(detail.getTaxAmount());
         newDetail.setTotal(detail.getTotal());
         newDetail.setCategory(detail.getCategory());
         newDetail.setInvoice(invoice);
