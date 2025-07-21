@@ -7,9 +7,7 @@ import com.project.demo.logic.entity.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,10 +25,28 @@ public class InvoiceService {
 
     public Invoice saveInvoice(Invoice invoice, Long userId) {
         User currentUser = validateAndGetUser(userId);
-        Invoice newInvoice = buildBaseInvoice(invoice, currentUser);
-        processInvoiceParties(newInvoice, invoice, currentUser);
-        Invoice savedInvoice = invoiceRepository.save(newInvoice);
+        Invoice invoiceToSave;
+
+        if (invoice.getId() != null) {
+            invoiceToSave = invoiceRepository.findById(invoice.getId())
+                    .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + invoice.getId()));
+
+            invoiceToSave.setConsecutive(invoice.getConsecutive());
+            invoiceToSave.setInvoiceKey(invoice.getInvoiceKey());
+            invoiceToSave.setIssueDate(invoice.getIssueDate());
+            invoiceToSave.setType(invoice.getType());
+
+            if (invoiceToSave.getDetails() != null && !invoiceToSave.getDetails().isEmpty()) {
+                detailsInvoiceRepository.deleteAll(invoiceToSave.getDetails());
+            }
+        } else {
+            invoiceToSave = buildBaseInvoice(invoice, currentUser);
+        }
+
+        processInvoiceParties(invoiceToSave, invoice, currentUser);
+        Invoice savedInvoice = invoiceRepository.save(invoiceToSave);
         processInvoiceDetails(invoice, savedInvoice);
+
         return savedInvoice;
     }
 
@@ -44,73 +60,59 @@ public class InvoiceService {
         Invoice newInvoice = new Invoice();
         newInvoice.setUser(user);
         newInvoice.setConsecutive(invoice.getConsecutive());
-        newInvoice.setKey(invoice.getKey());
+        newInvoice.setInvoiceKey(invoice.getInvoiceKey());
         newInvoice.setIssueDate(invoice.getIssueDate());
         newInvoice.setType(invoice.getType());
         return newInvoice;
     }
 
     private void processInvoiceParties(Invoice invoice, Invoice requestInvoice, User currentUser) {
-        if ("GASTO".equalsIgnoreCase(requestInvoice.getType())) {
-            processGastoInvoice(invoice, requestInvoice, currentUser);
-        } else {
-            processIngresoInvoice(invoice, requestInvoice, currentUser);
-        }
-    }
-
-    private void processGastoInvoice(Invoice invoice, Invoice requestInvoice, User currentUser) {
         if (requestInvoice.getIssuer() != null) {
             InvoiceUser issuer = findOrCreateInvoiceUser(requestInvoice.getIssuer());
             invoice.setIssuer(issuer);
+        } else {
+            invoice.setIssuer(findOrCreateInvoiceUser(currentUser));
         }
-
-        InvoiceUser receiver = findOrCreateInvoiceUser(currentUser);
-        invoice.setReceiver(receiver);
-    }
-
-    private void processIngresoInvoice(Invoice invoice, Invoice requestInvoice, User currentUser) {
-        InvoiceUser issuer = findOrCreateInvoiceUser(currentUser);
-        invoice.setIssuer(issuer);
 
         if (requestInvoice.getReceiver() != null) {
             InvoiceUser receiver = findOrCreateInvoiceUser(requestInvoice.getReceiver());
             invoice.setReceiver(receiver);
+        } else {
+            invoice.setReceiver(findOrCreateInvoiceUser(currentUser));
         }
     }
-    /*
-    private InvoiceUser findOrCreateInvoiceUser(InvoiceUser invoiceUser) {
-        InvoiceUser existingUser = invoiceUserRepository.findByIdentification(invoiceUser.getIdentification());
-        return existingUser != null ? existingUser : invoiceUserRepository.save(invoiceUser);
-    }
-    */
-    private InvoiceUser findOrCreateInvoiceUser(InvoiceUser invoiceUser) {
-        InvoiceUser existingUser = invoiceUserRepository.findByIdentification(invoiceUser.getIdentification());
+
+    private InvoiceUser findOrCreateInvoiceUser(InvoiceUser userFromRequest) {
+        InvoiceUser existingUser = invoiceUserRepository.findByIdentification(userFromRequest.getIdentification());
 
         if (existingUser != null) {
-            existingUser.setName(invoiceUser.getName());
-            existingUser.setLastName(invoiceUser.getLastName());
-            existingUser.setEmail(invoiceUser.getEmail());
+            existingUser.setName(userFromRequest.getName());
+            existingUser.setLastName(userFromRequest.getLastName());
+            existingUser.setEmail(userFromRequest.getEmail());
             return invoiceUserRepository.save(existingUser);
         }
-        return invoiceUserRepository.save(invoiceUser);
-    }
 
+        return invoiceUserRepository.save(userFromRequest);
+    }
 
     private InvoiceUser findOrCreateInvoiceUser(User user) {
         InvoiceUser existingUser = invoiceUserRepository.findByIdentification(user.getIdentification());
+
         if (existingUser != null) {
-            return existingUser;
+            existingUser.setName(user.getName());
+            existingUser.setLastName(user.getLastname());
+            existingUser.setEmail(user.getEmail());
+            return invoiceUserRepository.save(existingUser);
         }
 
-        InvoiceUser newInvoiceUser = new InvoiceUser();
-        newInvoiceUser.setName(user.getName());
-        newInvoiceUser.setLastName(user.getLastname());
-        newInvoiceUser.setEmail(user.getEmail());
-        newInvoiceUser.setIdentification(user.getIdentification());
-
-        return invoiceUserRepository.save(newInvoiceUser);
+        InvoiceUser newUser = new InvoiceUser();
+        newUser.setName(user.getName());
+        newUser.setLastName(user.getLastname());
+        newUser.setEmail(user.getEmail());
+        newUser.setIdentification(user.getIdentification());
+        return invoiceUserRepository.save(newUser);
     }
-    /*
+
     private void processInvoiceDetails(Invoice requestInvoice, Invoice savedInvoice) {
         if (requestInvoice.getDetails() != null && !requestInvoice.getDetails().isEmpty()) {
             List<DetailsInvoice> details = requestInvoice.getDetails().stream()
@@ -121,79 +123,25 @@ public class InvoiceService {
             savedInvoice.setDetails(details);
         }
     }
-    */
-
-    private void processInvoiceDetails(Invoice requestInvoice, Invoice savedInvoice) {
-
-        List<DetailsInvoice> updatedDetails = requestInvoice.getDetails();
-        List<DetailsInvoice> existingDetails = savedInvoice.getDetails();
-
-        Map<Long, DetailsInvoice> existingMap = existingDetails.stream()
-                .filter(d -> d.getId() != null)
-                .collect(Collectors.toMap(DetailsInvoice::getId, d -> d));
-
-        List<DetailsInvoice> resultDetails = new ArrayList<>();
-
-        for (DetailsInvoice incomingDetail : updatedDetails) {
-            DetailsInvoice detailToSave;
-
-            if (incomingDetail.getId() != null && existingMap.containsKey(incomingDetail.getId())) {
-                detailToSave = existingMap.get(incomingDetail.getId());
-            } else {
-                detailToSave = new DetailsInvoice();
-                detailToSave.setInvoice(savedInvoice);
-            }
-
-            detailToSave.setCabys(incomingDetail.getCabys());
-            detailToSave.setDescription(incomingDetail.getDescription());
-            detailToSave.setQuantity(incomingDetail.getQuantity());
-            detailToSave.setUnitPrice(incomingDetail.getUnitPrice());
-            detailToSave.setUnit(incomingDetail.getUnit());
-            detailToSave.setTax(incomingDetail.getTax());
-            detailToSave.setTaxAmount(incomingDetail.getTaxAmount());
-            detailToSave.setTotal(incomingDetail.getTotal());
-
-            resultDetails.add(detailToSave);
-        }
-
-        List<DetailsInvoice> savedDetails = detailsInvoiceRepository.saveAll(resultDetails);
-        savedInvoice.setDetails(savedDetails);
-    }
-
 
     private DetailsInvoice buildDetailInvoice(DetailsInvoice detail, Invoice invoice) {
         DetailsInvoice newDetail = new DetailsInvoice();
+
+        if (detail.getId() != null) {
+            newDetail.setId(detail.getId());
+        }
+
         newDetail.setCabys(detail.getCabys());
         newDetail.setDescription(detail.getDescription());
         newDetail.setQuantity(detail.getQuantity());
         newDetail.setUnitPrice(detail.getUnitPrice());
+        newDetail.setDiscount(detail.getDiscount());
         newDetail.setUnit(detail.getUnit());
         newDetail.setTax(detail.getTax());
+        newDetail.setTaxAmount(detail.getTaxAmount());
         newDetail.setTotal(detail.getTotal());
+        newDetail.setCategory(detail.getCategory());
         newDetail.setInvoice(invoice);
         return newDetail;
     }
-
-    public Invoice updateInvoice(Long id, Invoice updatedInvoice, Long userId) {
-        Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
-
-        if (foundInvoice.isEmpty()) {
-            throw new IllegalArgumentException("factura no encontrada con el id " + id);
-        }
-
-        User currentUser = validateAndGetUser(userId);
-        Invoice existingInvoice = foundInvoice.get();
-
-        existingInvoice.setConsecutive(updatedInvoice.getConsecutive());
-        existingInvoice.setIssueDate(updatedInvoice.getIssueDate());
-        existingInvoice.setType(updatedInvoice.getType());
-        existingInvoice.setKey(updatedInvoice.getKey());
-
-        processInvoiceDetails(updatedInvoice, existingInvoice);
-        processInvoiceParties(existingInvoice, updatedInvoice, currentUser);
-
-        return invoiceRepository.save(existingInvoice);
-    }
-
-
 }

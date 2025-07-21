@@ -20,8 +20,6 @@ public class DetailsInvoice {
     private String unit;
     private double discount;
     private double tax;
-    @JsonProperty("description")
-    private String description;
     private String category;
     private double taxAmount;
     private double total;
@@ -42,12 +40,13 @@ public class DetailsInvoice {
         this.id = id;
     }
 
-    public String getDescription() {
-        return description;
+    public String getCabys() {
+        return cabys;
     }
 
-    public void setDescription(String detailDescription) {
-        this.description = detailDescription;
+    public void setCabys(String cabys) {
+        this.cabys = cabys;
+    }
 
     public String getDescription() {
         return description;
@@ -57,6 +56,7 @@ public class DetailsInvoice {
         this.description = description;
     }
 
+    public double getQuantity() {
         return quantity;
     }
 
@@ -76,15 +76,16 @@ public class DetailsInvoice {
         return unit;
     }
 
-
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-   
+    public double getDiscount() {
+        return discount;
+    }
 
-    public void setInvoice(Invoice invoice) {
-        this.invoice = invoice;
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 
     public double getTax() {
@@ -95,17 +96,20 @@ public class DetailsInvoice {
         this.tax = tax;
     }
 
-    public String getCabys() {
-        return cabys;
+    public String getCategory() {
+        return category;
     }
-    public void setCabys(String cabys) {
-        this.cabys = cabys;
+
+    public void setCategory(String category) {
+        this.category = category;
     }
-    public double getDiscount() {
-        return discount;
+
+    public double getTaxAmount() {
+        return taxAmount;
     }
-    public void setDiscount(double discount) {
-        this.discount = discount;
+
+    public void setTaxAmount(double taxAmount) {
+        this.taxAmount = taxAmount;
     }
 
     public double getTotal() {
@@ -116,16 +120,11 @@ public class DetailsInvoice {
         this.total = total;
     }
 
-    public double getTaxAmount() {
-        return taxAmount;
+    public Invoice getInvoice() {
+        return invoice;
     }
-    public void setTaxAmount(double taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-    public String getCategory() {
-        return category;
-    }
-    public void setCategory(String category) {
-        this.category = category;
+
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
     }
 }

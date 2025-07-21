@@ -30,7 +30,7 @@ public class XmlService {
 
             invoice.setConsecutive(getText(document, "NumeroConsecutivo"));
 
-            invoice.setKey(getText(document, "Clave"));
+            invoice.setInvoiceKey(getText(document, "Clave"));
 
             String issueDate = getText(document, "FechaEmision");
             if (issueDate != null && !issueDate.isEmpty()) {

@@ -67,17 +67,6 @@ public class InvoiceController {
         );
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> getInvoiceById(@PathVariable Long id, HttpServletRequest request) {
-        Optional<Invoice> invoice = invoiceRepository.findById(id);
-        if (invoice.isPresent()) {
-            return new GlobalResponseHandler().handleResponse("Factura encontrada",invoice,HttpStatus.OK, request);
-        }
-
-        return new GlobalResponseHandler().handleResponse("Factura no encontrada",null,HttpStatus.NOT_FOUND, request);
-    }
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice, @AuthenticationPrincipal User userPrincipal,
@@ -93,33 +82,22 @@ public class InvoiceController {
                     null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
-    /*
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> updateInvoice(@PathVariable Long id, @RequestBody Invoice invoice, HttpServletRequest request) {
+    public ResponseEntity<?> updateInvoice(
+            @PathVariable Long id,
+            @RequestBody Invoice invoice,
+            @AuthenticationPrincipal User user,
+            HttpServletRequest request
+    ) {
         Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
         if (foundInvoice.isPresent()) {
-            invoice.setId(foundInvoice.get().getId());
-            invoiceRepository.save(invoice);
-            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", invoice, HttpStatus.OK, request);
+            invoice.setId(id);
+            Invoice updated = invoiceService.saveInvoice(invoice, user.getId());
+            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", updated, HttpStatus.OK, request);
         } else {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", HttpStatus.NOT_FOUND, request);
-        }
-    }
-    */
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> updateInvoice(@PathVariable Long id, @RequestBody Invoice invoice,
-                                           @AuthenticationPrincipal User userPrincipal,
-                                           HttpServletRequest request) {
-        try {
-            Invoice updatedInvoice = invoiceService.updateInvoice(id, invoice, userPrincipal.getId());
-            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente",
-                    updatedInvoice, HttpStatus.OK, request);
-
-        } catch (Exception e) {
-            return new GlobalResponseHandler().handleResponse("Error al actualizar factura: " + e.getMessage(),
-                    null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
 
