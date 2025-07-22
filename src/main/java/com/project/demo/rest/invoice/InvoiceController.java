@@ -8,6 +8,7 @@ import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/invoices")
@@ -87,18 +89,86 @@ public class InvoiceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> updateInvoice(
             @PathVariable Long id,
-            @RequestBody Invoice invoice,
-            @AuthenticationPrincipal User user,
+            @RequestBody Invoice requestInvoice,
             HttpServletRequest request) {
-        Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
-        if (foundInvoice.isPresent()) {
-            invoice.setId(id);
-            Invoice updated = invoiceService.saveInvoice(invoice, user.getId());
-            return new GlobalResponseHandler().handleResponse("Factura actualizada exitosamente", updated,
-                    HttpStatus.OK, request);
-        } else {
+
+        Optional<Invoice> found = invoiceRepository.findById(id);
+        if (found.isEmpty()) {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", HttpStatus.NOT_FOUND, request);
         }
+
+        Invoice invoiceToUpdate = found.get();
+
+        invoiceToUpdate.setConsecutive(requestInvoice.getConsecutive());
+        invoiceToUpdate.setIssueDate(requestInvoice.getIssueDate());
+        invoiceToUpdate.setInvoiceKey(requestInvoice.getInvoiceKey());
+        invoiceToUpdate.setType(requestInvoice.getType());
+
+        if (invoiceToUpdate.getIssuer() != null && requestInvoice.getIssuer() != null) {
+            Optional<InvoiceUser> issuerOpt = invoiceUserRepository.findById(invoiceToUpdate.getIssuer().getId());
+            issuerOpt.ifPresent(issuer -> {
+                issuer.setName(requestInvoice.getIssuer().getName());
+                issuer.setLastName(requestInvoice.getIssuer().getLastName());
+                issuer.setIdentification(requestInvoice.getIssuer().getIdentification());
+                issuer.setEmail(requestInvoice.getIssuer().getEmail());
+                invoiceUserRepository.save(issuer);
+            });
+        }
+
+        if (invoiceToUpdate.getReceiver() != null && requestInvoice.getReceiver() != null) {
+            Optional<InvoiceUser> receiverOpt = invoiceUserRepository.findById(invoiceToUpdate.getReceiver().getId());
+            receiverOpt.ifPresent(receiver -> {
+                receiver.setName(requestInvoice.getReceiver().getName());
+                receiver.setLastName(requestInvoice.getReceiver().getLastName());
+                receiver.setIdentification(requestInvoice.getReceiver().getIdentification());
+                receiver.setEmail(requestInvoice.getReceiver().getEmail());
+                invoiceUserRepository.save(receiver);
+            });
+        }
+
+        List<DetailsInvoice> currentDetails = invoiceToUpdate.getDetails();
+        List<DetailsInvoice> incomingDetails = requestInvoice.getDetails();
+
+        List<DetailsInvoice> toRemove = currentDetails.stream()
+                .filter(existing -> incomingDetails.stream().noneMatch(incoming ->
+                        incoming.getId() != null && incoming.getId().equals(existing.getId())))
+                .collect(Collectors.toList());
+
+        detailsInvoiceRepository.deleteAll(toRemove);
+        currentDetails.removeAll(toRemove);
+
+        for (DetailsInvoice detail : incomingDetails) {
+            if (detail.getId() == null) {
+                detail.setInvoice(invoiceToUpdate);
+                currentDetails.add(detail);
+            } else {
+                DetailsInvoice existing = currentDetails.stream()
+                        .filter(d -> d.getId().equals(detail.getId()))
+                        .findFirst()
+                        .orElse(null);
+                if (existing != null) {
+                    existing.setCabys(detail.getCabys());
+                    existing.setDescription(detail.getDescription());
+                    existing.setQuantity(detail.getQuantity());
+                    existing.setUnitPrice(detail.getUnitPrice());
+                    existing.setDiscount(detail.getDiscount());
+                    existing.setUnit(detail.getUnit());
+                    existing.setTax(detail.getTax());
+                    existing.setTaxAmount(detail.getTaxAmount());
+                    existing.setTotal(detail.getTotal());
+                    existing.setCategory(detail.getCategory());
+                }
+            }
+        }
+
+        invoiceRepository.save(invoiceToUpdate);
+
+        return new GlobalResponseHandler().handleResponse(
+                "Factura actualizada correctamente",
+                invoiceToUpdate,
+                HttpStatus.OK,
+                request
+        );
     }
 
     @DeleteMapping("/{id}")
