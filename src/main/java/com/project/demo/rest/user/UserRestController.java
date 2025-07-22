@@ -97,6 +97,7 @@ public class UserRestController {
         existingUser.setLastname2(user.getLastname2());
         existingUser.setEmail(user.getEmail());
         existingUser.setIdentification(user.getIdentification());
+        existingUser.setStatus(user.getStatus());
 
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             existingUser.setPassword(existingUser.getPassword());

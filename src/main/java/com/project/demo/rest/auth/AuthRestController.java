@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequestMapping("/auth")
@@ -48,12 +49,12 @@ public class AuthRestController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> authenticate(@RequestBody User user) {
         LoginResponse loginResponse = new LoginResponse();
+        User authenticatedUser;
 
         try {
-            User authenticatedUser = authenticationService.authenticate(user);
+            authenticatedUser = authenticationService.authenticate(user);
 
             String jwtToken = jwtService.generateToken(authenticatedUser);
-
             loginResponse.setToken(jwtToken);
             loginResponse.setExpiresIn(jwtService.getExpirationTime());
 
@@ -61,18 +62,14 @@ public class AuthRestController {
                     .ifPresent(loginResponse::setAuthUser);
 
             return ResponseEntity.ok(loginResponse);
-
         } catch (AuthenticationException ex) {
             loginResponse.setMessage("El nombre de usuario o la contraseña son incorrectos.");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(loginResponse);
-
+            loginResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
         } catch (Exception ex) {
             loginResponse.setMessage("Ocurrió un error interno. Inténtalo de nuevo más tarde.");
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(loginResponse);
+            loginResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(loginResponse);
         }
     }
 
@@ -124,12 +121,12 @@ public class AuthRestController {
         if (foundUser.isPresent()) {
             user = foundUser.get();
 
-            if (!user.isStatus()) {
+            if (Objects.equals(user.getStatus(), "blocked")) {
                 return new GlobalResponseHandler().handleResponse("El usuario ya está bloqueado", user, HttpStatus.OK,
                         request);
             }
 
-            user.setStatus(false);
+            user.setStatus("blocked");
             userRepository.save(user);
 
             return new GlobalResponseHandler().handleResponse("Usuario bloqueado con éxito",
