@@ -25,10 +25,28 @@ public class InvoiceService {
 
     public Invoice saveInvoice(Invoice invoice, Long userId) {
         User currentUser = validateAndGetUser(userId);
-        Invoice newInvoice = buildBaseInvoice(invoice, currentUser);
-        processInvoiceParties(newInvoice, invoice, currentUser);
-        Invoice savedInvoice = invoiceRepository.save(newInvoice);
+        Invoice invoiceToSave;
+
+        if (invoice.getId() != null) {
+            invoiceToSave = invoiceRepository.findById(invoice.getId())
+                    .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + invoice.getId()));
+
+            invoiceToSave.setConsecutive(invoice.getConsecutive());
+            invoiceToSave.setInvoiceKey(invoice.getInvoiceKey());
+            invoiceToSave.setIssueDate(invoice.getIssueDate());
+            invoiceToSave.setType(invoice.getType());
+
+            if (invoiceToSave.getDetails() != null && !invoiceToSave.getDetails().isEmpty()) {
+                detailsInvoiceRepository.deleteAll(invoiceToSave.getDetails());
+            }
+        } else {
+            invoiceToSave = buildBaseInvoice(invoice, currentUser);
+        }
+
+        processInvoiceParties(invoiceToSave, invoice, currentUser);
+        Invoice savedInvoice = invoiceRepository.save(invoiceToSave);
         processInvoiceDetails(invoice, savedInvoice);
+
         return savedInvoice;
     }
 
@@ -49,51 +67,50 @@ public class InvoiceService {
     }
 
     private void processInvoiceParties(Invoice invoice, Invoice requestInvoice, User currentUser) {
-        if ("GASTO".equalsIgnoreCase(requestInvoice.getType())) {
-            processGastoInvoice(invoice, requestInvoice, currentUser);
-        } else {
-            processIngresoInvoice(invoice, requestInvoice, currentUser);
-        }
-    }
-
-    private void processGastoInvoice(Invoice invoice, Invoice requestInvoice, User currentUser) {
         if (requestInvoice.getIssuer() != null) {
             InvoiceUser issuer = findOrCreateInvoiceUser(requestInvoice.getIssuer());
             invoice.setIssuer(issuer);
+        } else {
+            invoice.setIssuer(findOrCreateInvoiceUser(currentUser));
         }
-
-        InvoiceUser receiver = findOrCreateInvoiceUser(currentUser);
-        invoice.setReceiver(receiver);
-    }
-
-    private void processIngresoInvoice(Invoice invoice, Invoice requestInvoice, User currentUser) {
-        InvoiceUser issuer = findOrCreateInvoiceUser(currentUser);
-        invoice.setIssuer(issuer);
 
         if (requestInvoice.getReceiver() != null) {
             InvoiceUser receiver = findOrCreateInvoiceUser(requestInvoice.getReceiver());
             invoice.setReceiver(receiver);
+        } else {
+            invoice.setReceiver(findOrCreateInvoiceUser(currentUser));
         }
     }
 
-    private InvoiceUser findOrCreateInvoiceUser(InvoiceUser invoiceUser) {
-        InvoiceUser existingUser = invoiceUserRepository.findByIdentification(invoiceUser.getIdentification());
-        return existingUser != null ? existingUser : invoiceUserRepository.save(invoiceUser);
+    private InvoiceUser findOrCreateInvoiceUser(InvoiceUser userFromRequest) {
+        InvoiceUser existingUser = invoiceUserRepository.findByIdentification(userFromRequest.getIdentification());
+
+        if (existingUser != null) {
+            existingUser.setName(userFromRequest.getName());
+            existingUser.setLastName(userFromRequest.getLastName());
+            existingUser.setEmail(userFromRequest.getEmail());
+            return invoiceUserRepository.save(existingUser);
+        }
+
+        return invoiceUserRepository.save(userFromRequest);
     }
 
     private InvoiceUser findOrCreateInvoiceUser(User user) {
         InvoiceUser existingUser = invoiceUserRepository.findByIdentification(user.getIdentification());
+
         if (existingUser != null) {
-            return existingUser;
+            existingUser.setName(user.getName());
+            existingUser.setLastName(user.getLastname());
+            existingUser.setEmail(user.getEmail());
+            return invoiceUserRepository.save(existingUser);
         }
 
-        InvoiceUser newInvoiceUser = new InvoiceUser();
-        newInvoiceUser.setName(user.getName());
-        newInvoiceUser.setLastName(user.getLastname());
-        newInvoiceUser.setEmail(user.getEmail());
-        newInvoiceUser.setIdentification(user.getIdentification());
-
-        return invoiceUserRepository.save(newInvoiceUser);
+        InvoiceUser newUser = new InvoiceUser();
+        newUser.setName(user.getName());
+        newUser.setLastName(user.getLastname());
+        newUser.setEmail(user.getEmail());
+        newUser.setIdentification(user.getIdentification());
+        return invoiceUserRepository.save(newUser);
     }
 
     private void processInvoiceDetails(Invoice requestInvoice, Invoice savedInvoice) {
@@ -109,6 +126,11 @@ public class InvoiceService {
 
     private DetailsInvoice buildDetailInvoice(DetailsInvoice detail, Invoice invoice) {
         DetailsInvoice newDetail = new DetailsInvoice();
+
+        if (detail.getId() != null) {
+            newDetail.setId(detail.getId());
+        }
+
         newDetail.setCabys(detail.getCabys());
         newDetail.setDescription(detail.getDescription());
         newDetail.setQuantity(detail.getQuantity());
@@ -122,5 +144,4 @@ public class InvoiceService {
         newDetail.setInvoice(invoice);
         return newDetail;
     }
-
 }
