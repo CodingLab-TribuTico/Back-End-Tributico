@@ -9,6 +9,8 @@ public class LoginResponse {
 
     private String message; // add this to LoginResponse
 
+    private int status;
+
     public String getMessage() {
         return message;
     }
@@ -39,5 +41,13 @@ public class LoginResponse {
 
     public void setAuthUser(User authUser) {
         this.authUser = authUser;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }
