@@ -29,7 +29,7 @@ public class User implements UserDetails {
     private String identification;
     private LocalDate birthDate;
     @Column(nullable = false)
-    private String status = "activo";
+    private String status = "active";
 
     @Column(nullable = false)
     private String password;
