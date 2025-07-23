@@ -189,7 +189,7 @@ public class UserRestController {
             User existingUser = foundUser.get();
             if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
                 return new GlobalResponseHandler().handleResponse("Contraseña actual incorrecta",
-                        HttpStatus.UNAUTHORIZED, request);
+                        HttpStatus.BAD_REQUEST, request);
             }
             existingUser.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(existingUser);
