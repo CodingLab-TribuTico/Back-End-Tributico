@@ -7,7 +7,7 @@ public class LoginResponse {
 
     private long expiresIn;
 
-    private String message; // add this to LoginResponse
+    private String message;
 
     private int status;
 
