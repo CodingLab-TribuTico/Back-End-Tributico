@@ -41,6 +41,7 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
 
         CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
         String email = oauthUser.getEmail();
+        String googleId = oauthUser.getAttributes().get("sub").toString().substring(0, 9);
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
@@ -51,8 +52,7 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
                     newUser.setRole(roleRepository.findByName(RoleEnum.USER)
                             .orElseThrow(() -> new RuntimeException("Role USER not found")));
                     newUser.setPassword(passwordEncoder.encode("User123"));
-                    newUser.setIdentification("Google_");
-                    newUser.setStatus("active");
+                    newUser.setIdentification(googleId);
                     return userRepository.save(newUser);
                 });
 
