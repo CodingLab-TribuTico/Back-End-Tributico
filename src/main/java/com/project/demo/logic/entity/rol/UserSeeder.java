@@ -45,6 +45,7 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
                 superAdminRole.setPassword(password);
                 superAdminRole.setIdentification(identification);
                 superAdminRole.setBirthDate(birthDate);
+                superAdminRole.setStatus("active");
 
                 Optional<Role> optionalRole = roleRepository.findByName(role);
                 Optional<User> optionalUser = userRepository.findByEmail(superAdminRole.getEmail());
@@ -62,7 +63,7 @@ public class UserSeeder implements ApplicationListener<ContextRefreshedEvent> {
                 user.setRole(optionalRole.get());
                 user.setIdentification(superAdminRole.getIdentification());
                 user.setBirthDate(superAdminRole.getBirthDate());
-                user.setStatus(true);
+                user.setStatus("active");
 
                 userRepository.save(user);
         }
