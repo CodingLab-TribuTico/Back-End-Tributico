@@ -41,7 +41,6 @@ public class IsrSimulationController {
             @RequestParam Long userId,
             HttpServletRequest request
     ) {
-        // Buscar facturas y usuario
         List<Invoice> invoices = invoiceRepository.findByYear(year, userId);
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
@@ -54,10 +53,8 @@ public class IsrSimulationController {
         // Datos generales
         sim.setSimulationPeriod("12/" + year);
         sim.setSimulationName(user.getName().toUpperCase() + " " + user.getLastname().toUpperCase() +
-                (!user.getLastname2().isEmpty() ? " " + user.getLastname2().toUpperCase() : ""));
-        sim.setSimulationIdentification(user.getIdentification());
+                (user.getLastname2() != null && !user.getLastname2().isEmpty() ? " " + user.getLastname2().toUpperCase() : ""));
 
-        // Inicializar variables
         double salesRevenue = 0, professionalFees = 0, commissions = 0, interests = 0, dividends = 0, rents = 0;
         double otherIncome = 0, nonTaxableIncome = 0;
         double purchases = 0, adminExpenses = 0, financialExpenses = 0, depreciation = 0, pensionContributions = 0, otherDeductions = 0;

@@ -30,8 +30,6 @@ public class InvoiceController {
     InvoiceRepository invoiceRepository;
 
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     DetailsInvoiceRepository detailsInvoiceRepository;
     @Autowired
     InvoiceUserRepository invoiceUserRepository;
@@ -42,7 +40,7 @@ public class InvoiceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getAll(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "") String search,
             @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {

@@ -1,6 +1,5 @@
 package com.project.demo.logic.entity.detailsInvoice;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.fasterxml.jackson.annotation.JsonBackReference;
