@@ -94,7 +94,7 @@ public class NotificationController {
             updatedNotification.setDescription(notification.getDescription());
             updatedNotification.setType(notification.getType());
             updatedNotification.setState(notification.getState());
-            updatedNotification.setDate(notification.getDate());
+            updatedNotification.setCloseDate(notification.getCloseDate());
 
             notificationRepository.save(updatedNotification);
 

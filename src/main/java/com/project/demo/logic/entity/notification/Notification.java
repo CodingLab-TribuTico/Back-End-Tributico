@@ -2,6 +2,8 @@ package com.project.demo.logic.entity.notification;
 
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -24,22 +26,22 @@ public class Notification {
     private String type;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private LocalDateTime closeDate;
 
     @Column(nullable = false)
     private String state;
 
+    @CreationTimestamp
+    @Column(updatable = false, name = "created_at")
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
     public Notification() {
     }
 
-    public Notification(long id, String name, String description, String type, LocalDateTime date, String state) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.type = type;
-        this.date = date;
-        this.state = state;
-    }
 
     public long getId() {
         return id;
@@ -73,12 +75,12 @@ public class Notification {
         this.type = type;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public LocalDateTime getCloseDate() {
+        return closeDate;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
+    public void setCloseDate(LocalDateTime closeDate) {
+        this.closeDate = closeDate;
     }
 
     public String getState() {
@@ -87,5 +89,21 @@ public class Notification {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
