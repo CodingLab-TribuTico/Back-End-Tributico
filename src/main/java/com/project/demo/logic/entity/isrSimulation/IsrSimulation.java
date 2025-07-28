@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.isrSimulation;
 
+import com.project.demo.logic.entity.user.User;
 import jakarta.persistence.*;
 
 @Entity
@@ -67,6 +68,10 @@ public class IsrSimulation {
     private double totalTaxDebt;
     private double requestedCompensation;
     private double totalDebtToPay;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Long getId() {
         return id;
@@ -442,5 +447,13 @@ public class IsrSimulation {
 
     public void setTotalDebtToPay(double totalDebtToPay) {
         this.totalDebtToPay = totalDebtToPay;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
