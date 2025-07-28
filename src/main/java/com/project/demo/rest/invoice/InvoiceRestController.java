@@ -6,9 +6,7 @@ import com.project.demo.logic.entity.invoice.*;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.user.User;
-import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/invoices")
-public class InvoiceController {
+public class InvoiceRestController {
     @Autowired
     InvoiceRepository invoiceRepository;
 
@@ -42,8 +40,31 @@ public class InvoiceController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int year,
             @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {
+
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
+        if (size == 0 && year >= 0) {
+            List<Invoice> invoiceList;
+            if(year == 0){
+                invoiceList = invoiceRepository.findByUserId(userPrincipal.getId());
+            } else {
+                invoiceList = invoiceRepository.findByYear(year, userPrincipal.getId());
+            }
+
+            meta.setTotalPages(1);
+            meta.setTotalElements((long) invoiceList.size());
+            meta.setPageNumber(1);
+            meta.setPageSize(invoiceList.size());
+
+            return new GlobalResponseHandler().handleResponse(
+                    "Facturas recuperadas exitosamente (sin paginación)",
+                    invoiceList,
+                    HttpStatus.OK,
+                    meta);
+        }
+
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Invoice> electronicBillPage;
 
@@ -54,7 +75,6 @@ public class InvoiceController {
                     pageable);
         }
 
-        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
         meta.setTotalPages(electronicBillPage.getTotalPages());
         meta.setTotalElements(electronicBillPage.getTotalElements());
         meta.setPageNumber(electronicBillPage.getNumber() + 1);
