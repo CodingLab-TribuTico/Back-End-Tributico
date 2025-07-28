@@ -1,0 +1,175 @@
+package com.project.demo.logic.entity.ivacalculation;
+
+import com.project.demo.logic.entity.user.User;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "iva_calculation")
+public class IvaCalculation {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private int year;
+    private int month;
+    private LocalDate calculationDate;
+
+    @Column(precision = 15, scale = 2, name = "iva_ventas_bienes")
+    private BigDecimal ivaVentasBienes = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_ventas_servicios")
+    private BigDecimal ivaVentasServicios = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_exportaciones")
+    private BigDecimal ivaExportaciones = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_actividades_agropecuarias")
+    private BigDecimal ivaActividadesAgropecuarias = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_compras_bienes")
+    private BigDecimal ivaComprasBienes = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_compras_servicios")
+    private BigDecimal ivaComprasServicios = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_importaciones")
+    private BigDecimal ivaImportaciones = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_gastos_generales")
+    private BigDecimal ivaGastosGenerales = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_activos_fijos")
+    private BigDecimal ivaActivosFijos = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "total_iva_debito")
+    private BigDecimal totalIvaDebito = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "total_iva_credito")
+    private BigDecimal totalIvaCredito = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_neto_por_pagar")
+    private BigDecimal ivaNetoPorPagar = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2, name = "iva_a_favor")
+    private BigDecimal ivaAFavor = BigDecimal.ZERO;
+
+    public IvaCalculation() {}
+
+    public IvaCalculation(User user, int year, int month) {
+        this.user = user;
+        this.year = year;
+        this.month = month;
+        this.calculationDate = LocalDate.now();
+    }
+
+    public void calculateTotals() {
+        this.totalIvaDebito = ivaVentasBienes
+                .add(ivaVentasServicios)
+                .add(ivaExportaciones)
+                .add(ivaActividadesAgropecuarias);
+        
+        this.totalIvaCredito = ivaComprasBienes
+                .add(ivaComprasServicios)
+                .add(ivaImportaciones)
+                .add(ivaGastosGenerales)
+                .add(ivaActivosFijos);
+        
+        BigDecimal diferencia = totalIvaDebito.subtract(totalIvaCredito);
+        
+        if (diferencia.compareTo(BigDecimal.ZERO) > 0) {
+            this.ivaNetoPorPagar = diferencia;
+            this.ivaAFavor = BigDecimal.ZERO;
+        } else {
+            this.ivaNetoPorPagar = BigDecimal.ZERO;
+            this.ivaAFavor = diferencia.abs();
+        }
+        
+        if (this.calculationDate == null) {
+            this.calculationDate = LocalDate.now();
+        }
+    }
+
+    public void finalizeSimulation() {
+        calculateTotals();
+        this.calculationDate = LocalDate.now();
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public int getYear() { return year; }
+    public void setYear(int year) { this.year = year; }
+
+    public int getMonth() { return month; }
+    public void setMonth(int month) { this.month = month; }
+
+    public LocalDate getCalculationDate() { return calculationDate; }
+    public void setCalculationDate(LocalDate calculationDate) { this.calculationDate = calculationDate; }
+
+    public BigDecimal getIvaVentasBienes() { return ivaVentasBienes; }
+    public void setIvaVentasBienes(BigDecimal ivaVentasBienes) { 
+        this.ivaVentasBienes = ivaVentasBienes != null ? ivaVentasBienes : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaVentasServicios() { return ivaVentasServicios; }
+    public void setIvaVentasServicios(BigDecimal ivaVentasServicios) { 
+        this.ivaVentasServicios = ivaVentasServicios != null ? ivaVentasServicios : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaExportaciones() { return ivaExportaciones; }
+    public void setIvaExportaciones(BigDecimal ivaExportaciones) { 
+        this.ivaExportaciones = ivaExportaciones != null ? ivaExportaciones : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaActividadesAgropecuarias() { return ivaActividadesAgropecuarias; }
+    public void setIvaActividadesAgropecuarias(BigDecimal ivaActividadesAgropecuarias) { 
+        this.ivaActividadesAgropecuarias = ivaActividadesAgropecuarias != null ? ivaActividadesAgropecuarias : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaComprasBienes() { return ivaComprasBienes; }
+    public void setIvaComprasBienes(BigDecimal ivaComprasBienes) { 
+        this.ivaComprasBienes = ivaComprasBienes != null ? ivaComprasBienes : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaComprasServicios() { return ivaComprasServicios; }
+    public void setIvaComprasServicios(BigDecimal ivaComprasServicios) { 
+        this.ivaComprasServicios = ivaComprasServicios != null ? ivaComprasServicios : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaImportaciones() { return ivaImportaciones; }
+    public void setIvaImportaciones(BigDecimal ivaImportaciones) { 
+        this.ivaImportaciones = ivaImportaciones != null ? ivaImportaciones : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaGastosGenerales() { return ivaGastosGenerales; }
+    public void setIvaGastosGenerales(BigDecimal ivaGastosGenerales) { 
+        this.ivaGastosGenerales = ivaGastosGenerales != null ? ivaGastosGenerales : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getIvaActivosFijos() { return ivaActivosFijos; }
+    public void setIvaActivosFijos(BigDecimal ivaActivosFijos) { 
+        this.ivaActivosFijos = ivaActivosFijos != null ? ivaActivosFijos : BigDecimal.ZERO; 
+    }
+
+    public BigDecimal getTotalIvaDebito() { return totalIvaDebito; }
+    public void setTotalIvaDebito(BigDecimal totalIvaDebito) { this.totalIvaDebito = totalIvaDebito; }
+
+    public BigDecimal getTotalIvaCredito() { return totalIvaCredito; }
+    public void setTotalIvaCredito(BigDecimal totalIvaCredito) { this.totalIvaCredito = totalIvaCredito; }
+
+    public BigDecimal getIvaNetoPorPagar() { return ivaNetoPorPagar; }
+    public void setIvaNetoPorPagar(BigDecimal ivaNetoPorPagar) { this.ivaNetoPorPagar = ivaNetoPorPagar; }
+
+    public BigDecimal getIvaAFavor() { return ivaAFavor; }
+    public void setIvaAFavor(BigDecimal ivaAFavor) { this.ivaAFavor = ivaAFavor; }
+}
+
