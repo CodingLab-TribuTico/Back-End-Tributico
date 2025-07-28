@@ -2,7 +2,6 @@ package com.project.demo.rest.isrSimulation;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
-import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.invoice.InvoiceRepository;
 import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
@@ -10,9 +9,6 @@ import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/isr-simulation")
-public class IsrSimulationController {
+public class IsrSimulationRestController {
 
     @Autowired
     InvoiceRepository invoiceRepository;
@@ -54,6 +50,7 @@ public class IsrSimulationController {
         sim.setSimulationPeriod("12/" + year);
         sim.setSimulationName(user.getName().toUpperCase() + " " + user.getLastname().toUpperCase() +
                 (user.getLastname2() != null && !user.getLastname2().isEmpty() ? " " + user.getLastname2().toUpperCase() : ""));
+        sim.setSimulationIdentification(user.getIdentification());
 
         double salesRevenue = 0, professionalFees = 0, commissions = 0, interests = 0, dividends = 0, rents = 0;
         double otherIncome = 0, nonTaxableIncome = 0;
