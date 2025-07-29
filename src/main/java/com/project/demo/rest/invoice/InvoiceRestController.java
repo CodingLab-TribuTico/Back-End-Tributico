@@ -40,31 +40,10 @@ public class InvoiceRestController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "0") int year,
             @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {
 
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
-        if (size == 0 && year >= 0) {
-            List<Invoice> invoiceList;
-            if(year == 0){
-                invoiceList = invoiceRepository.findByUserId(userPrincipal.getId());
-            } else {
-                invoiceList = invoiceRepository.findByYear(year, userPrincipal.getId());
-            }
-
-            meta.setTotalPages(1);
-            meta.setTotalElements((long) invoiceList.size());
-            meta.setPageNumber(1);
-            meta.setPageSize(invoiceList.size());
-
-            return new GlobalResponseHandler().handleResponse(
-                    "Facturas recuperadas exitosamente (sin paginación)",
-                    invoiceList,
-                    HttpStatus.OK,
-                    meta);
-        }
-
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Invoice> electronicBillPage;
 
