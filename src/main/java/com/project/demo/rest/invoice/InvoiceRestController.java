@@ -6,9 +6,7 @@ import com.project.demo.logic.entity.invoice.*;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.user.User;
-import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/invoices")
-public class InvoiceController {
+public class InvoiceRestController {
     @Autowired
     InvoiceRepository invoiceRepository;
 
@@ -44,6 +42,8 @@ public class InvoiceController {
             @RequestParam(defaultValue = "") String search,
             @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {
+
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Invoice> electronicBillPage;
 
@@ -54,7 +54,6 @@ public class InvoiceController {
                     pageable);
         }
 
-        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
         meta.setTotalPages(electronicBillPage.getTotalPages());
         meta.setTotalElements(electronicBillPage.getTotalElements());
         meta.setPageNumber(electronicBillPage.getNumber() + 1);
