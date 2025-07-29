@@ -47,7 +47,7 @@ public class SimulationController {
         if (foundUser.isPresent()) {
             simulation.setUser(foundUser.get());
             IsrSimulation savedSimulation = isrRepository.save(simulation);
-            return new GlobalResponseHandler().handleResponse("Simulación guardada con exito",
+            return new GlobalResponseHandler().handleResponse("Simulación guardada exitosamente",
                     savedSimulation, HttpStatus.CREATED, request);
 
         } else {
@@ -137,7 +137,7 @@ public class SimulationController {
         IsrSimulation simulation = foundSimulation.get();
 
         try {
-            String htmlBody = simulationService.generateSimulation(simulation);
+            String htmlBody = simulationService.generateSimulationPdf(simulation);
             String formattedHtmlContent = IsrSimulationService.generateHtmlContent(htmlBody);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -148,7 +148,7 @@ public class SimulationController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentDisposition(ContentDisposition.builder("attachment")
-                    .filename("Simulación_" + id + ".pdf")
+                    .filename("simulación.pdf")
                     .build());
             headers.setContentType(MediaType.APPLICATION_PDF);
 
@@ -169,49 +169,17 @@ public class SimulationController {
         }
 
         IsrSimulation sim = foundSimulation.get();
-        String csvContent = simulationService.generateCsvContent(sim);
+        String csvContent = simulationService.generateSimulationCsv(sim);
 
         byte[] csvBytes = csvContent.getBytes(StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
         headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename("simulacion_" + id + ".csv")
+                .filename("simulación.csv")
                 .build());
 
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
     }
-    /*
-    @GetMapping("/generate-csv/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<byte[]> downloadCsvById(@PathVariable Long id) {
-        Optional<IsrSimulation> simulationOpt = isrRepository.findById(id);
-
-        if (simulationOpt.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        IsrSimulation simulation = simulationOpt.get();
-
-        try {
-            // Aquí generamos el contenido CSV
-            String csvContent = simulationService.generateCsvContent(simulation);
-            byte[] csvBytes = csvContent.getBytes(StandardCharsets.UTF_8);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=simulacion_" + id + ".csv");
-            headers.add(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8");
-
-            return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    */
-
-
-
 }
 

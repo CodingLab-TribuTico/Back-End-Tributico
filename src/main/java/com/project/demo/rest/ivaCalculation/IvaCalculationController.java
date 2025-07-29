@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/iva-calculation")
+@RequestMapping("/iva-simulation")//calculation
 
 
 public class IvaCalculationController {

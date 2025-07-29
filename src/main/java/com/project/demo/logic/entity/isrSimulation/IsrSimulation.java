@@ -14,6 +14,8 @@ public class IsrSimulation {
     private String simulationName;
     private String simulationIdentification;
 
+    private String simulationType;
+
     // I. Activos y pasivos
     private double currentAssets;
     private double equityInvestments;
@@ -455,5 +457,13 @@ public class IsrSimulation {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getSimulationType() {
+        return simulationType;
+    }
+
+    public void setSimulationType(String simulationType) {
+        this.simulationType = simulationType;
     }
 }

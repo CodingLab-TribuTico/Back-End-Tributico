@@ -3,13 +3,22 @@ package com.project.demo.logic.entity.isrSimulation;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 @Service
 public class IsrSimulationService {
 
-    private static final DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+    private static final DecimalFormat decimalFormat = createDecimalFormat();
 
-    private String formatNumber(double number) {
+    private static DecimalFormat createDecimalFormat() {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        symbols.setGroupingSeparator(',');
+        symbols.setDecimalSeparator('.');
+        return new DecimalFormat("#,##0.00", symbols);
+    }
+
+    private static String formatNumber(double number) {
         return decimalFormat.format(number);
     }
 
@@ -22,7 +31,7 @@ public class IsrSimulationService {
                 "</html>";
     }
 
-    public String generateSimulation(IsrSimulation sim) {
+    public String generateSimulationPdf(IsrSimulation sim) {
         StringBuilder body = new StringBuilder();
 
         body.append("<div style='font-family: Arial, sans-serif;'>");
@@ -46,8 +55,8 @@ public class IsrSimulationService {
             .append("<tr><td style='padding: 8px;'>22 - Inventarios</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getInventory())).append("</td></tr>")
             .append("<tr><td style='padding: 8px;'>23 - Activos fijos (descuente la depreciacion acumulada)</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getNetFixedAssets())).append("</td></tr>")
             .append("<tr><td style='padding: 8px;'>24 - Total activo neto (autocalculado)</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getTotalNetAssets())).append("</td></tr>")
-            .append("<tr><td style='padding: 8px;'>24 - Total pasivo</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getTotalLiabilities())).append("</td></tr>")
-            .append("<tr><td style='padding: 8px;'>24 - Capital neto (autocalculado)</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getNetEquity())).append("</td></tr>")
+            .append("<tr><td style='padding: 8px;'>25 - Total pasivo</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getTotalLiabilities())).append("</td></tr>")
+            .append("<tr><td style='padding: 8px;'>26 - Capital neto (autocalculado)</td><td style='text-align: right;'>₡ ").append(formatNumber(sim.getNetEquity())).append("</td></tr>")
             .append("</table>");
 
 
@@ -120,70 +129,74 @@ public class IsrSimulationService {
         return body.toString();
     }
 
-    public String generateCsvContent(IsrSimulation sim) {
+    public String generateSimulationCsv(IsrSimulation sim) {
         StringBuilder csv = new StringBuilder();
 
-        csv.append("SECCIÓN,CONCEPTO,VALOR\n");
-
-        // Información general
-        csv.append("Información General,Período,").append(sim.getSimulationPeriod()).append("\n");
-        csv.append("Información General,Cédula,").append(sim.getSimulationIdentification()).append("\n");
-        csv.append("Información General,Nombre,").append(escape(sim.getSimulationName())).append("\n");
+        csv.append("D-101 - Declaración Jurada del Impuesto sobre la Renta\n");
+        csv.append("02 - Período,").append(sim.getSimulationPeriod()).append("\n");
+        csv.append("04 - Cédula,").append(sim.getSimulationIdentification()).append("\n");
+        csv.append("06 - Nombre,").append(escape(sim.getSimulationName())).append("\n");
 
         // I. Activos y Pasivos
-        csv.append("I. Activos y Pasivos,Efectivo,").append(sim.getCurrentAssets()).append("\n");
-        csv.append("I. Activos y Pasivos,Acciones y aportes,").append(sim.getEquityInvestments()).append("\n");
-        csv.append("I. Activos y Pasivos,Inventarios,").append(sim.getInventory()).append("\n");
-        csv.append("I. Activos y Pasivos,Activos fijos,").append(sim.getNetFixedAssets()).append("\n");
-        csv.append("I. Activos y Pasivos,Total activo neto,").append(sim.getTotalNetAssets()).append("\n");
-        csv.append("I. Activos y Pasivos,Total pasivo,").append(sim.getTotalLiabilities()).append("\n");
-        csv.append("I. Activos y Pasivos,Capital neto,").append(sim.getNetEquity()).append("\n");
+        csv.append("I. Activos y pasivos\n");
+        csv.append("20 - Efectivo, bancos, inversiones transitorias, documentos y cuentas por cobrar,").append(sim.getCurrentAssets()).append("\n");
+        csv.append("21 - Acciones y aportes en sociedades,").append(sim.getEquityInvestments()).append("\n");
+        csv.append("22 - Inventarios,").append(sim.getInventory()).append("\n");
+        csv.append("23 - Activos fijos (descuente la depreciacion acumulada),").append(sim.getNetFixedAssets()).append("\n");
+        csv.append("24 - Total activo neto (autocalculado),").append(sim.getTotalNetAssets()).append("\n");
+        csv.append("25 - Total pasivo,").append(sim.getTotalLiabilities()).append("\n");
+        csv.append("26 - Capital neto (autocalculado),").append(sim.getNetEquity()).append("\n");
 
         // II. Ingresos y deducciones
-        csv.append("II. Ingresos y Deducciones,Venta de bienes y servicios,").append(sim.getSalesRevenue()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Servicios profesionales y honorarios,").append(sim.getProfessionalFees()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Comisiones,").append(sim.getCommissions()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Intereses y rendimientos,").append(sim.getInterestsAndYields()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Dividendos y participaciones,").append(sim.getDividendsAndShares()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Alquileres,").append(sim.getRents()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Otros ingresos,").append(sim.getOtherIncome()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Ingresos no gravables,").append(sim.getNonTaxableIncome()).append("\n");
-        csv.append("II. Ingresos y Deducciones,Total renta bruta,").append(sim.getGrossIncomeTotal()).append("\n");
+        csv.append("II. Ingresos y deducciones\n");
+        csv.append("27 - Venta de bienes y servicios, excepto los servicios profesionales,").append(formatNumber(sim.getSalesRevenue())).append("\n");
+        csv.append("28 - Servicios profesionales y honorarios,").append(formatNumber(sim.getProfessionalFees())).append("\n");
+        csv.append("29 - Comisiones,").append(formatNumber(sim.getCommissions())).append("\n");
+        csv.append("30 - Intereses y rendimientos,").append(formatNumber(sim.getInterestsAndYields())).append("\n");
+        csv.append("31 - Dividendos y participaciones,").append(formatNumber(sim.getDividendsAndShares())).append("\n");
+        csv.append("32 - Alquileres,").append(formatNumber(sim.getRents())).append("\n");
+        csv.append("33 - Otros ingresos diferentes a los anteriores,").append(formatNumber(sim.getOtherIncome())).append("\n");
+        csv.append("34 - Ingresos no gravables incluidos dentro de los anteriores,").append(formatNumber(sim.getNonTaxableIncome())).append("\n");
+        csv.append("35 - Total de renta bruta (autocalculado),").append(formatNumber(sim.getGrossIncomeTotal())).append("\n");
 
         // III. Costos, gastos y deducciones
-        csv.append("III. Costos y Gastos,Inventario inicial,").append(sim.getInitialInventory()).append("\n");
-        csv.append("III. Costos y Gastos,Compras,").append(sim.getPurchases()).append("\n");
-        csv.append("III. Costos y Gastos,Inventario final,").append(sim.getFinalInventory()).append("\n");
-        csv.append("III. Costos y Gastos,Costo de ventas,").append(sim.getCostOfGoodsSold()).append("\n");
-        csv.append("III. Costos y Gastos,Gastos financieros,").append(sim.getFinancialExpenses()).append("\n");
-        csv.append("III. Costos y Gastos,Gastos administrativos,").append(sim.getAdministrativeExpenses()).append("\n");
-        csv.append("III. Costos y Gastos,Depreciación y amortización,").append(sim.getDepreciationAndAmortization()).append("\n");
-        csv.append("III. Costos y Gastos,Aportes a pensiones,").append(sim.getPensionContributions()).append("\n");
-        csv.append("III. Costos y Gastos,Otros deducibles,").append(sim.getOtherAllowableDeductions()).append("\n");
-        csv.append("III. Costos y Gastos,Total deducciones,").append(sim.getTotalAllowableDeductions()).append("\n");
+        csv.append("III. Costos, gastos y deducciones\n");
+        csv.append("36 - Inventario inicial,").append(formatNumber(sim.getInitialInventory())).append("\n");
+        csv.append("37 - Compras,").append(formatNumber(sim.getPurchases())).append("\n");
+        csv.append("38 - Inventario final,").append(formatNumber(sim.getFinalInventory())).append("\n");
+        csv.append("39 - Costo de ventas,").append(formatNumber(sim.getCostOfGoodsSold())).append("\n");
+        csv.append("40 - Intereses y gastos financieros,").append(formatNumber(sim.getFinancialExpenses())).append("\n");
+        csv.append("41 - Gastos de ventas y administrativos,").append(formatNumber(sim.getAdministrativeExpenses())).append("\n");
+        csv.append("42 - Depreciación, amortización y agotamiento,").append(formatNumber(sim.getDepreciationAndAmortization())).append("\n");
+        csv.append("43 - Aportes de regimenes voluntarios de pensiones complementias (Max 10% renta bruta),").append(formatNumber(sim.getPensionContributions())).append("\n");
+        csv.append("44 - Otros costos, gastos y deducciones permitidos por la ley,").append(formatNumber(sim.getOtherAllowableDeductions())).append("\n");
+        csv.append("45 - Total de costos, gastos y deducciones permitidos por la ley (autocalculado),").append(formatNumber(sim.getTotalAllowableDeductions())).append("\n");
 
         // IV. Base imponible
-        csv.append("IV. Base Imponible,Renta neta,").append(sim.getNetTaxableIncome()).append("\n");
-        csv.append("IV. Base Imponible,Monto no sujeto,").append(sim.getNonTaxableSalaryAmount()).append("\n");
-        csv.append("IV. Base Imponible,Impuesto ISR,").append(sim.getIncomeTax()).append("\n");
-        csv.append("IV. Base Imponible,Exoneración zona franca,").append(sim.getFreeTradeZoneExemption()).append("\n");
-        csv.append("IV. Base Imponible,Otras exoneraciones,").append(sim.getOtherExemptions()).append("\n");
-        csv.append("IV. Base Imponible,ISR después de exoneraciones,").append(sim.getNetIncomeTaxAfterExemptions()).append("\n");
+        csv.append("IV. Base imponible\n");
+        csv.append("46 - Renta neta (autocalculado),").append(formatNumber(sim.getNetTaxableIncome())).append("\n");
+        csv.append("46 (bis) - Monto no sujeto aplicado al impuesto al salario (acumulado anual),").append(formatNumber(sim.getNonTaxableSalaryAmount())).append("\n");
+        csv.append("47 - Impuesto sobre la renta (autocalculado),").append(formatNumber(sim.getIncomeTax())).append("\n");
+        csv.append("51 - Exoneración de zona franca,").append(formatNumber(sim.getFreeTradeZoneExemption())).append("\n");
+        csv.append("53 - Exoneración de otros conceptos,").append(formatNumber(sim.getOtherExemptions())).append("\n");
+        csv.append("54 - Impuesto sobre la renta después de exoneraciones (autocalculado),").append(formatNumber(sim.getNetIncomeTaxAfterExemptions())).append("\n");
 
         // V. Créditos
-        csv.append("V. Créditos,Crédito familiar,").append(sim.getFamilyCredit()).append("\n");
-        csv.append("V. Créditos,Otros créditos,").append(sim.getOtherCredits()).append("\n");
-        csv.append("V. Créditos,Impuesto del periodo,").append(sim.getPeriodTax()).append("\n");
-        csv.append("V. Créditos,Retenciones 2%,").append(sim.getTwoPercentWithholdings()).append("\n");
-        csv.append("V. Créditos,Otras retenciones,").append(sim.getOtherWithholdings()).append("\n");
-        csv.append("V. Créditos,Pagos parciales,").append(sim.getPartialPayments()).append("\n");
-        csv.append("V. Créditos,Total impuesto neto,").append(sim.getTotalNetTax()).append("\n");
+        csv.append("V. Créditos\n");
+        csv.append("58 - Crédito familiar (solo personas físicas),").append(formatNumber(sim.getFamilyCredit())).append("\n");
+        csv.append("59 - Otros créditos,").append(formatNumber(sim.getOtherCredits())).append("\n");
+        csv.append("60 - Impuesto del periodo (autocalculado),").append(formatNumber(sim.getPeriodTax())).append("\n");
+        csv.append("61 - Retenciones 2%,").append(formatNumber(sim.getTwoPercentWithholdings())).append("\n");
+        csv.append("62 - Otras retenciones,").append(formatNumber(sim.getOtherWithholdings())).append("\n");
+        csv.append("63 - Pagos parciales,").append(formatNumber(sim.getPartialPayments())).append("\n");
+        csv.append("64 - Total impuesto neto (autocalculado),").append(formatNumber(sim.getTotalNetTax())).append("\n");
 
-        // VI. Liquidación de deuda
-        csv.append("VI. Deuda Tributaria,Intereses,").append(sim.getInterests()).append("\n");
-        csv.append("VI. Deuda Tributaria,Total deuda tributaria,").append(sim.getTotalTaxDebt()).append("\n");
-        csv.append("VI. Deuda Tributaria,Compensación solicitada,").append(sim.getRequestedCompensation()).append("\n");
-        csv.append("VI. Deuda Tributaria,Total deuda por pagar,").append(sim.getTotalDebtToPay()).append("\n");
+        // VI. Liquidación deuda tributaria
+        csv.append("VI. Liquidación deuda tributaria\n");
+        csv.append("82 - Intereses (autocalculado),").append(formatNumber(sim.getInterests())).append("\n");
+        csv.append("83 - Total deuda tributaria (autocalculado),").append(formatNumber(sim.getTotalTaxDebt())).append("\n");
+        csv.append("84 - Solicito compensar con créditos a mi favor por el monto de,").append(formatNumber(sim.getRequestedCompensation())).append("\n");
+        csv.append("85 - Total deuda por pagar (autocalculado),").append(formatNumber(sim.getTotalDebtToPay())).append("\n");
 
         return csv.toString();
     }
@@ -192,6 +205,4 @@ public class IsrSimulationService {
         if (value == null) return "";
         return "\"" + value.replace("\"", "\"\"") + "\"";
     }
-
-
 }
