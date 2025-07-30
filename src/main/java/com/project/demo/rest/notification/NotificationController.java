@@ -103,6 +103,8 @@ public class NotificationController {
         try {
             Notification savedNotification = notificationRepository.save(notification);
 
+            messagingTemplate.convertAndSend("/topic/notifications", savedNotification);
+
             List<User> users = userRepository.findAll();
             for (User user : users) {
                 UserNotificationStatus status = new UserNotificationStatus();
@@ -141,6 +143,8 @@ public class NotificationController {
 
             notificationRepository.save(updatedNotification);
 
+            messagingTemplate.convertAndSend("/topic/notifications", updatedNotification);
+
             return new GlobalResponseHandler().handleResponse("Notificacion actualizada con exito"
                     ,updatedNotification,HttpStatus.OK,request);
 
@@ -171,6 +175,9 @@ public class NotificationController {
         Optional<Notification> foundNotification = notificationRepository.findById(notificationId);
         if(foundNotification.isPresent()) {
             notificationRepository.deleteById(notificationId);
+
+            messagingTemplate.convertAndSend("/topic/notifications", notificationId);
+
             return new GlobalResponseHandler().handleResponse("Notificacion eliminada exitosamente",
                     foundNotification.get(), HttpStatus.OK, request);
         } else {
