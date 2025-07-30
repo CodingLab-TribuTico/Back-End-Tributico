@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.invoice;
 
+import com.project.demo.logic.entity.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -56,4 +57,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     LIMIT 5
     """, nativeQuery = true)
     List<Object[]> getTop5ExpenseCategoriesByYear(@Param("year") int year, @Param("userId") Long userId);
+
+    Long user(User user);
 }
