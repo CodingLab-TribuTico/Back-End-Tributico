@@ -4,6 +4,10 @@ import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.notification.Notification;
 import com.project.demo.logic.entity.notification.NotificationRepository;
+import com.project.demo.logic.entity.notification.NotificationStatusRepository;
+import com.project.demo.logic.entity.notification.UserNotificationStatus;
+import com.project.demo.logic.entity.user.User;
+import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,10 +15,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/notifications")
@@ -23,8 +32,17 @@ public class NotificationController {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private NotificationStatusRepository statusRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','USER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -63,11 +81,36 @@ public class NotificationController {
         }
     }
 
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getPendingNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
+        try {
+            List<UserNotificationStatus> unread = statusRepository.findByUserIdAndIsReadFalse(user.getId());
+
+            List<Notification> notifications = unread.stream()
+                    .map(UserNotificationStatus::getNotification)
+                    .collect(Collectors.toList());
+
+            return new GlobalResponseHandler().handleResponse("Notificaciones no leidas", notifications, HttpStatus.OK, request);
+        }catch (Exception e){
+            return new GlobalResponseHandler().handleResponse("Erro al recuerar notificaciones no leídas", null, HttpStatus.BAD_REQUEST, request);
+        }
+    }
+
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> create(@RequestBody Notification notification, HttpServletRequest request) {
         try {
             Notification savedNotification = notificationRepository.save(notification);
+
+            List<User> users = userRepository.findAll();
+            for (User user : users) {
+                UserNotificationStatus status = new UserNotificationStatus();
+                status.setUser(user);
+                status.setNotification(savedNotification);
+                status.setRead(false);
+                statusRepository.save(status);
+            }
 
             return new GlobalResponseHandler().handleResponse("Notificacion creada con exito",
                     savedNotification, HttpStatus.CREATED, request);
@@ -78,7 +121,7 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updateNotification(@PathVariable("id") Long id, @RequestBody Notification notification, HttpServletRequest request) {
         try {
             Optional<Notification> foundNotification = notificationRepository.findById(id);
@@ -108,8 +151,22 @@ public class NotificationController {
         }
     }
 
+    @PutMapping("/read/{notificationId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> markAsRead(@PathVariable Long notificationId, HttpServletRequest request, @AuthenticationPrincipal User user) {
+        Optional<UserNotificationStatus> foundStatus = statusRepository.findByUserIdAndNotificationId(user.getId(), notificationId);
+
+        if (foundStatus.isPresent()){
+            UserNotificationStatus status = foundStatus.get();
+            status.setRead(true);
+            statusRepository.save(status);
+            return new GlobalResponseHandler().handleResponse("Notificación marcada como leída", null, HttpStatus.OK, request);
+        }
+        return new GlobalResponseHandler().handleResponse("No se encontro una notificación asociada al usuario", null, HttpStatus.NOT_FOUND, request);
+    }
+
     @DeleteMapping("/{notificationId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long notificationId, HttpServletRequest request) {
         Optional<Notification> foundNotification = notificationRepository.findById(notificationId);
         if(foundNotification.isPresent()) {
@@ -121,4 +178,11 @@ public class NotificationController {
                     HttpStatus.NOT_FOUND, request);
         }
     }
+
+    private boolean isRelevantNotification(LocalDate closeDate){
+        LocalDate today = LocalDate.now();
+        LocalDate threeDaysLater = today.plusDays(3);
+        return !closeDate.isBefore(today) && !closeDate.isAfter(threeDaysLater);
+    }
+
 }
