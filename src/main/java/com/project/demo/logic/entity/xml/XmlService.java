@@ -2,7 +2,7 @@ package com.project.demo.logic.entity.xml;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.invoice.Invoice;
-import com.project.demo.logic.entity.invoice.InvoiceUser;
+import com.project.demo.logic.entity.invoiceUser.InvoiceUser;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 public class XmlService {
 
-    public Invoice formatAndSave(InputStream inputStream) throws Exception {
+    public Invoice formatAndSave(InputStream inputStream, String type) throws Exception {
         try {
             Document document = DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder()
@@ -26,6 +26,7 @@ public class XmlService {
 
             Invoice invoice = new Invoice();
 
+            invoice.setType(type);
             invoice.setConsecutive(getText(document, "NumeroConsecutivo"));
 
             invoice.setInvoiceKey(getText(document, "Clave"));

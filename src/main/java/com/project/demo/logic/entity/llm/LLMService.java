@@ -86,7 +86,7 @@ public class LLMService {
               "unit": "<string>",
               "unitPrice": <float>,
               "discount": <float>,
-              "tax": <float>,  // Only allowed values: 13.0, 10.0, 4.0, 2.0, 1.0, or 0.0,
+              "tax": <float>,  // Only allowed values: %s, %s, %s, %s, %s, or %s,
               "taxAmount": <float>,
               "category": "<string (category code)>",
               "total": <float>,
@@ -99,7 +99,9 @@ public class LLMService {
         [[[
         %s
         ]]]
-        """, type, invoice);
+        """, type, TaxRateEnum.TAX_RATE_GENERAL.getRate(), TaxRateEnum.TAX_RATE_REDUCED.getRate(),
+        TaxRateEnum.TAX_RATE_SPECIAL.getRate(), TaxRateEnum.TAX_RATE_ADJUSTED.getRate(),
+        TaxRateEnum.TAX_RATE_MINIMUM.getRate(), TaxRateEnum.TAX_RATE_ZERO.getRate(), invoice);
 
 
         OllamaOptions options = OllamaOptions.builder()
