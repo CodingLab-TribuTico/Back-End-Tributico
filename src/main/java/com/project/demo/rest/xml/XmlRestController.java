@@ -30,4 +30,5 @@ public class XmlRestController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    
 }
