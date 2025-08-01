@@ -9,6 +9,7 @@ import com.project.demo.logic.entity.notification.UserNotificationStatus;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -171,11 +172,15 @@ public class NotificationController {
 
     @DeleteMapping("/{notificationId}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Transactional
     public ResponseEntity<?> deleteUser(@PathVariable Long notificationId, HttpServletRequest request) {
+        List<UserNotificationStatus> foundStatus = statusRepository.findByNotificationId(notificationId);
+        if (!foundStatus.isEmpty()){
+            statusRepository.deleteByNotificationId(notificationId);
+        }
         Optional<Notification> foundNotification = notificationRepository.findById(notificationId);
         if(foundNotification.isPresent()) {
             notificationRepository.deleteById(notificationId);
-
             messagingTemplate.convertAndSend("/topic/notifications", notificationId);
 
             return new GlobalResponseHandler().handleResponse("Notificacion eliminada exitosamente",

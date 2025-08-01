@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface NotificationStatusRepository extends JpaRepository<UserNotificationStatus, Long> {
     List<UserNotificationStatus> findByUserIdAndIsReadFalse(Long userId);
     Optional<UserNotificationStatus> findByUserIdAndNotificationId(Long userId, Long notificationId);
+    List<UserNotificationStatus> findByNotificationId(Long notificationId);
+    void deleteByNotificationId(Long notificationId);
 }
