@@ -1,56 +1,18 @@
-package com.project.demo.rest.isrSimulation;
+package com.project.demo.logic.entity.isrSimulation;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
-import com.project.demo.logic.entity.http.GlobalResponseHandler;
-import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.invoice.Invoice;
-import com.project.demo.logic.entity.invoice.InvoiceRepository;
-import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
 import com.project.demo.logic.entity.user.User;
-import com.project.demo.logic.entity.user.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
-@RestController
-@RequestMapping("/isr-simulation")
-public class IsrSimulationController {
+@Service
+public class TaxIsrCalculationService {
 
-    @Autowired
-    InvoiceRepository invoiceRepository;
-
-    @Autowired
-    UserRepository userRepository;
-
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> createSimulation(
-            @RequestParam(defaultValue = "2024") int year,
-            @RequestParam(defaultValue = "0", required = false) int childrenNumber,
-            @RequestParam(defaultValue = "false", required = false) boolean hasSpouse,
-            @RequestParam Long userId,
-            HttpServletRequest request
-    ) {
-        List<Invoice> invoices = invoiceRepository.findByYear(year, userId);
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            return new GlobalResponseHandler().handleResponse("Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
-        }
-        User user = userOpt.get();
-
+    public IsrSimulation simulate(User user, List<Invoice> invoices, int year, int childrenNumber, boolean hasSpouse) {
         IsrSimulation sim = new IsrSimulation();
 
-        // Datos generales
         sim.setSimulationPeriod("12/" + year);
         sim.setSimulationName(user.getName().toUpperCase() + " " + user.getLastname().toUpperCase() +
                 (user.getLastname2() != null && !user.getLastname2().isEmpty() ? " " + user.getLastname2().toUpperCase() : ""));
@@ -64,7 +26,7 @@ public class IsrSimulationController {
         for (Invoice invoice : invoices) {
             for (DetailsInvoice detail : invoice.getDetails()) {
                 String category = detail.getCategory();
-                double netIncome = detail.getTotal()-detail.getTaxAmount();
+                double netIncome = detail.getTotal() - detail.getTaxAmount();
 
                 switch (category) {
                     case "VG-B" -> salesRevenue += netIncome;
@@ -102,7 +64,7 @@ public class IsrSimulationController {
         sim.setGrossIncomeTotal(grossIncome);
 
         // III. Costos, gastos y deducciones
-        double cogs = purchases; // No usas inventario
+        double cogs = purchases;
 
         sim.setInitialInventory(0);
         sim.setFinalInventory(0);
@@ -123,7 +85,7 @@ public class IsrSimulationController {
         sim.setNonTaxableSalaryAmount(0);
 
         // V. Cálculo del ISR
-        double incomeTax = calcularISR(rentaNeta);
+        double incomeTax = calculateTotalISR(rentaNeta);
         sim.setIncomeTax(incomeTax);
         sim.setFreeTradeZoneExemption(0);
         sim.setOtherExemptions(0);
@@ -137,7 +99,7 @@ public class IsrSimulationController {
         sim.setFamilyCredit(totalCredits);
         sim.setOtherCredits(0);
 
-        // Impuesto final (redondeado)
+        // Impuesto final
         double impuestoFinal = Math.max(0, Math.round(incomeTax - totalCredits));
         sim.setPeriodTax(impuestoFinal);
         sim.setTwoPercentWithholdings(0);
@@ -151,10 +113,10 @@ public class IsrSimulationController {
         sim.setRequestedCompensation(0);
         sim.setTotalDebtToPay(impuestoFinal);
 
-        return new GlobalResponseHandler().handleResponse("Simulación generada correctamente", sim, HttpStatus.OK, request);
+        return sim;
     }
 
-    private double calcularISR(double rentaNeta) {
+    private double calculateTotalISR(double rentaNeta) {
         final double TRAMO_1 = 4094000;
         final double TRAMO_2 = 6115000;
         final double TRAMO_3 = 10200000;
@@ -162,29 +124,22 @@ public class IsrSimulationController {
 
         double impuesto = 0;
 
-        if (rentaNeta <= TRAMO_1) {
-            return 0;
-        }
-
+        if (rentaNeta <= TRAMO_1) return 0;
         if (rentaNeta > TRAMO_4) {
             impuesto += (rentaNeta - TRAMO_4) * 0.25;
             rentaNeta = TRAMO_4;
         }
-
         if (rentaNeta > TRAMO_3) {
             impuesto += (rentaNeta - TRAMO_3) * 0.20;
             rentaNeta = TRAMO_3;
         }
-
         if (rentaNeta > TRAMO_2) {
             impuesto += (rentaNeta - TRAMO_2) * 0.15;
             rentaNeta = TRAMO_2;
         }
-
         if (rentaNeta > TRAMO_1) {
             impuesto += (rentaNeta - TRAMO_1) * 0.10;
         }
-
         return impuesto;
     }
 }

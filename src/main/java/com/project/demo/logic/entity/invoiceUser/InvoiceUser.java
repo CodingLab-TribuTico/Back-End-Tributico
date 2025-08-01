@@ -1,4 +1,4 @@
-package com.project.demo.logic.entity.invoice;
+package com.project.demo.logic.entity.invoiceUser;
 
 import jakarta.persistence.*;
 
