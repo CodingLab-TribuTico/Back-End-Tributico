@@ -1,8 +1,8 @@
 package com.project.demo.logic.entity.invoice;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.project.demo.logic.entity.invoiceUser.InvoiceUser;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,7 +44,6 @@ public class Invoice {
     @JsonManagedReference
     private List<DetailsInvoice> details;
 
-
     public Long getId() {
         return id;
     }
@@ -53,7 +52,7 @@ public class Invoice {
         this.id = id;
     }
 
-    public String  getConsecutive() {
+    public String getConsecutive() {
         return consecutive;
     }
 
@@ -112,6 +111,7 @@ public class Invoice {
     public String getType() {
         return type;
     }
+
     public void setType(String type) {
         this.type = type;
 

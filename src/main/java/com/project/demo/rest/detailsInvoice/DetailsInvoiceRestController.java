@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/details-invoice")
-public class DetailsInvoiceController {
+public class DetailsInvoiceRestController {
     @Autowired
     DetailsInvoiceRepository detailsInvoiceRepository;
 

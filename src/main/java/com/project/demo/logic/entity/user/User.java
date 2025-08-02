@@ -4,7 +4,6 @@ import com.project.demo.logic.entity.rol.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,8 +27,8 @@ public class User implements UserDetails {
     @Column(unique = true, length = 9, nullable = false)
     private String identification;
     private LocalDate birthDate;
-    @Column(nullable = false, columnDefinition = "boolean default true")
-    private boolean status = true;
+    @Column(nullable = false)
+    private String status = "active";
 
     @Column(nullable = false)
     private String password;
@@ -172,11 +171,11 @@ public class User implements UserDetails {
         this.birthDate = birthDate;
     }
 
-    public boolean isStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(boolean status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 }

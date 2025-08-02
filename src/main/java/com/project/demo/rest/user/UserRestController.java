@@ -97,6 +97,7 @@ public class UserRestController {
         existingUser.setLastname2(user.getLastname2());
         existingUser.setEmail(user.getEmail());
         existingUser.setIdentification(user.getIdentification());
+        existingUser.setStatus(user.getStatus());
 
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             existingUser.setPassword(existingUser.getPassword());
@@ -188,7 +189,7 @@ public class UserRestController {
             User existingUser = foundUser.get();
             if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
                 return new GlobalResponseHandler().handleResponse("Contraseña actual incorrecta",
-                        HttpStatus.UNAUTHORIZED, request);
+                        HttpStatus.BAD_REQUEST, request);
             }
             existingUser.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(existingUser);
