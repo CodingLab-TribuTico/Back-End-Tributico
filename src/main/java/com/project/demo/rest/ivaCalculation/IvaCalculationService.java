@@ -1,106 +1,156 @@
 package com.project.demo.rest.ivaCalculation;
 
+import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
+import com.project.demo.logic.entity.invoice.Invoice;
+import com.project.demo.logic.entity.invoice.InvoiceRepository;
 import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
+import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
+import com.project.demo.logic.entity.user.User;
+import com.project.demo.logic.entity.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Service
+@Transactional
 public class IvaCalculationService {
 
     @Autowired
-    private com.project.demo.rest.ivaCalculation.IvaCalculationRepository ivaCalculationRepository;
+    private IvaCalculationRepository ivaCalculationRepository;
 
-   
-    public boolean validateIvaAmounts(IvaCalculation calculation) {
-        return calculation.getIvaVentasBienes().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaVentasServicios().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaExportaciones().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaActividadesAgropecuarias().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaComprasBienes().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaComprasServicios().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaImportaciones().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaGastosGenerales().compareTo(BigDecimal.ZERO) >= 0 &&
-               calculation.getIvaActivosFijos().compareTo(BigDecimal.ZERO) >= 0;
-    }
+    @Autowired
+    private InvoiceRepository invoiceRepository;
 
-   
-    public BigDecimal calculateEffectiveIvaRate(IvaCalculation calculation) {
-        if (calculation.getTotalIvaDebito().compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        
-        return calculation.getTotalIvaCredito()
-                .divide(calculation.getTotalIvaDebito(), 4, BigDecimal.ROUND_HALF_UP)
-                .multiply(new BigDecimal("100"));
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    
-    public IvaCalculation createBlankSimulation(Long userId, int year, int month) {
-        IvaCalculation calculation = new IvaCalculation();
-        calculation.setYear(year);
-        calculation.setMonth(month);
-        
-        calculation.calculateTotals();
-        
-        return calculation;
-    }
+    public IvaCalculation createIvaSimulation(int year, int month, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    
-    public IvaCalculation processSimulation(IvaCalculation calculation) {
-        if (!validateIvaAmounts(calculation)) {
-            throw new IllegalArgumentException("Los montos de IVA no pueden ser negativos");
-        }
-        
-        calculation.calculateTotals();
-        
-        return calculation;
-    }
+        Optional<IvaCalculation> existing = ivaCalculationRepository
+                .findByUserAndYearAndMonth(userId, year, month);
 
-    
-    public IvaCalculationSummary generateCalculationSummary(IvaCalculation calculation) {
-        return new IvaCalculationSummary(calculation);
-    }
-
-    
-    public static class IvaCalculationSummary {
-        private final IvaCalculation calculation;
-
-        public IvaCalculationSummary(IvaCalculation calculation) {
-            this.calculation = calculation;
+        if (existing.isPresent()) {
+            ivaCalculationRepository.delete(existing.get());
         }
 
-        public String getDetailedReport() {
-            StringBuilder report = new StringBuilder();
-            report.append("=== SIMULACIÓN DE IVA ===\n");
-            report.append("Período: ").append(calculation.getMonth()).append("/").append(calculation.getYear()).append("\n");
-            report.append("Usuario: ").append(calculation.getUser().getName()).append("\n\n");
-            
-            report.append("INGRESOS (IVA Débito):\n");
-            report.append("- Ventas de Bienes: ₡").append(calculation.getIvaVentasBienes()).append("\n");
-            report.append("- Ventas de Servicios: ₡").append(calculation.getIvaVentasServicios()).append("\n");
-            report.append("- Exportaciones: ₡").append(calculation.getIvaExportaciones()).append("\n");
-            report.append("- Actividades Agropecuarias: ₡").append(calculation.getIvaActividadesAgropecuarias()).append("\n");
-            report.append("TOTAL IVA DÉBITO: ₡").append(calculation.getTotalIvaDebito()).append("\n\n");
-            
-            report.append("EGRESOS (IVA Crédito):\n");
-            report.append("- Compras de Bienes: ₡").append(calculation.getIvaComprasBienes()).append("\n");
-            report.append("- Compras de Servicios: ₡").append(calculation.getIvaComprasServicios()).append("\n");
-            report.append("- Importaciones: ₡").append(calculation.getIvaImportaciones()).append("\n");
-            report.append("- Gastos Generales: ₡").append(calculation.getIvaGastosGenerales()).append("\n");
-            report.append("- Activos Fijos: ₡").append(calculation.getIvaActivosFijos()).append("\n");
-            report.append("TOTAL IVA CRÉDITO: ₡").append(calculation.getTotalIvaCredito()).append("\n\n");
-            
-            report.append("RESULTADO:\n");
-            if (calculation.getIvaNetoPorPagar().compareTo(BigDecimal.ZERO) > 0) {
-                report.append("IVA POR PAGAR: ₡").append(calculation.getIvaNetoPorPagar()).append("\n");
-            } else {
-                report.append("IVA A FAVOR: ₡").append(calculation.getIvaAFavor()).append("\n");
+        IvaCalculation ivaCalculation = new IvaCalculation(user, year, month);
+
+        List<Invoice> invoices = invoiceRepository.findByYear(year, userId);
+        processInvoicesForIva(invoices, month, ivaCalculation);
+
+        ivaCalculation.calculateTotals();
+
+        return ivaCalculationRepository.save(ivaCalculation);
+    }
+
+    public IvaCalculation getSimulationById(Long id) {
+        return ivaCalculationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Simulación no encontrada"));
+    }
+
+    public List<IvaCalculation> getUserSimulations(Long userId) {
+        return ivaCalculationRepository.findByUserOrderByDateDesc(userId);
+    }
+
+    private void processInvoicesForIva(List<Invoice> invoices, int month, IvaCalculation ivaCalculation) {
+        for (Invoice invoice : invoices) {
+            if (invoice.getIssueDate().getMonthValue() != month) {
+                continue;
             }
-            
-            return report.toString();
+
+            if (invoice.getDetails() == null || invoice.getDetails().isEmpty()) {
+                continue;
+            }
+
+            for (DetailsInvoice detail : invoice.getDetails()) {
+                String category = detail.getCategory();
+
+                if (category == null || category.trim().isEmpty()) {
+                    continue;
+                }
+
+                BigDecimal ivaAmount = detail.getTaxAmount() > 0 ?
+                        BigDecimal.valueOf(detail.getTaxAmount()) :
+                        BigDecimal.valueOf(detail.getTotal()).multiply(determineIvaRate(category));
+
+                String invoiceType = invoice.getType();
+
+                if ("ingreso".equalsIgnoreCase(invoiceType)) {
+                    processVentasDebito(category, ivaAmount, ivaCalculation);
+                    BigDecimal realTaxRate = BigDecimal.valueOf(detail.getTax()).divide(BigDecimal.valueOf(100));
+                    accumulateByPercentage(realTaxRate, ivaAmount, ivaCalculation);
+                } else if ("gasto".equalsIgnoreCase(invoiceType)) {
+                    processComprasCredito(category, ivaAmount, ivaCalculation);
+                }
+            }
         }
+    }
+
+    private void processVentasDebito(String category, BigDecimal ivaAmount, IvaCalculation ivaCalculation) {
+        switch (category) {
+            case "VG-B" -> ivaCalculation.setIvaVentasBienes(
+                    ivaCalculation.getIvaVentasBienes().add(ivaAmount));
+            case "VG-S", "GSP", "GA", "GV", "PP", "MR", "HP", "SPS" ->
+                    ivaCalculation.setIvaVentasServicios(
+                            ivaCalculation.getIvaVentasServicios().add(ivaAmount));
+            case "VE", "EXP" -> ivaCalculation.setIvaExportaciones(
+                    ivaCalculation.getIvaExportaciones().add(ivaAmount));
+            case "ALO" -> ivaCalculation.setIvaActividadesAgropecuarias(
+                    ivaCalculation.getIvaActividadesAgropecuarias().add(ivaAmount));
+            default -> ivaCalculation.setIvaVentasServicios(
+                    ivaCalculation.getIvaVentasServicios().add(ivaAmount));
+        }
+    }
+
+    private void processComprasCredito(String category, BigDecimal ivaAmount, IvaCalculation ivaCalculation) {
+        switch (category) {
+            case "CBG", "CBR", "VG-B" -> ivaCalculation.setIvaComprasBienes(
+                    ivaCalculation.getIvaComprasBienes().add(ivaAmount));
+            case "CSG", "CSR", "VG-S" -> ivaCalculation.setIvaComprasServicios(
+                    ivaCalculation.getIvaComprasServicios().add(ivaAmount));
+            case "IMP" -> ivaCalculation.setIvaImportaciones(
+                    ivaCalculation.getIvaImportaciones().add(ivaAmount));
+            case "CAF" -> ivaCalculation.setIvaActivosFijos(
+                    ivaCalculation.getIvaActivosFijos().add(ivaAmount));
+            default -> ivaCalculation.setIvaGastosGenerales(
+                    ivaCalculation.getIvaGastosGenerales().add(ivaAmount));
+        }
+    }
+
+    private void accumulateByPercentage(BigDecimal ivaRate, BigDecimal ivaAmount, IvaCalculation ivaCalculation) {
+        if (ivaRate.compareTo(new BigDecimal("0.01")) == 0) {
+            ivaCalculation.setIva1Percent(ivaCalculation.getIva1Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(new BigDecimal("0.02")) == 0) {
+            ivaCalculation.setIva2Percent(ivaCalculation.getIva2Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(new BigDecimal("0.04")) == 0) {
+            ivaCalculation.setIva4Percent(ivaCalculation.getIva4Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(new BigDecimal("0.08")) == 0) {
+            ivaCalculation.setIva8Percent(ivaCalculation.getIva8Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(new BigDecimal("0.10")) == 0) {
+            ivaCalculation.setIva10Percent(ivaCalculation.getIva10Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(new BigDecimal("0.13")) == 0) {
+            ivaCalculation.setIva13Percent(ivaCalculation.getIva13Percent().add(ivaAmount));
+        } else if (ivaRate.compareTo(BigDecimal.ZERO) == 0) {
+            ivaCalculation.setIvaExento(ivaCalculation.getIvaExento().add(ivaAmount));
+        } else {
+            ivaCalculation.setIva13Percent(ivaCalculation.getIva13Percent().add(ivaAmount));
+        }
+    }
+
+    private BigDecimal determineIvaRate(String category) {
+        return switch (category) {
+            case "CBR", "CSR" -> new BigDecimal("0.01");
+            case "GSP" -> new BigDecimal("0.04");
+            case "VE", "VX", "EXP", "CX", "GF", "GS", "DON", "NCE", "NCR", "MUL" -> BigDecimal.ZERO;
+            case "VG-B", "VG-S", "CBG", "CSG", "GA", "SPS", "HP", "GV", "PP", "ALO", "MR", "CAF" -> new BigDecimal("0.13");
+            default -> new BigDecimal("0.13");
+        };
     }
 }
