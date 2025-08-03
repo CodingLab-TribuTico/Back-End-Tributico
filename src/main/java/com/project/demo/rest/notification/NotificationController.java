@@ -2,10 +2,7 @@ package com.project.demo.rest.notification;
 
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
-import com.project.demo.logic.entity.notification.Notification;
-import com.project.demo.logic.entity.notification.NotificationRepository;
-import com.project.demo.logic.entity.notification.NotificationStatusRepository;
-import com.project.demo.logic.entity.notification.UserNotificationStatus;
+import com.project.demo.logic.entity.notification.*;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -98,6 +95,29 @@ public class NotificationController {
         }
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','USER')")
+    public ResponseEntity<?> getAllNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
+        try {
+            List<UserNotificationStatus> foundNotifications = statusRepository.findByUserId(user.getId());
+
+            if (foundNotifications.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse("No hay notificaciones", null, HttpStatus.NO_CONTENT, request);
+            }
+
+            List<NotificationStatus> notifications = foundNotifications.stream()
+                    .map(status -> new NotificationStatus(
+                            status.getNotification(),
+                            status.isRead()
+                    ))
+                    .collect(Collectors.toList());
+
+            return new GlobalResponseHandler().handleResponse("Notificaciones recuperadas con exito", notifications, HttpStatus.OK, request);
+        }catch (Exception e){
+            return new GlobalResponseHandler().handleResponse("Ocurrio un error al  obtener las notiificaciones",null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> create(@RequestBody Notification notification, HttpServletRequest request) {
@@ -156,7 +176,7 @@ public class NotificationController {
         }
     }
 
-    @PutMapping("/read/{notificationId}")
+    @PatchMapping("/read/{notificationId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId, HttpServletRequest request, @AuthenticationPrincipal User user) {
         Optional<UserNotificationStatus> foundStatus = statusRepository.findByUserIdAndNotificationId(user.getId(), notificationId);
