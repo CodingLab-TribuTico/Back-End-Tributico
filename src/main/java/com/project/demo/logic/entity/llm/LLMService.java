@@ -6,9 +6,9 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service;
 
-// @Service // Comentado para excluir este bean de Spring
+@Service
 public class LLMService {
     @Value("${spring.ai.ollama.chat.options.model}")
     private String model;
