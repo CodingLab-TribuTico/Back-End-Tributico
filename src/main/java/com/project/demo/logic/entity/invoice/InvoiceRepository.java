@@ -16,8 +16,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
             "LOWER(CAST(e.id AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(CAST(e.consecutive AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(CAST(e.consecutive AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(e.user.email) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Invoice> searchElectronicBills(@Param("search") String search, @Param("userId") Long userId,
+            "LOWER(e.issuer.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(e.issuer.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Invoice> searchInvoices(@Param("search") String search, @Param("userId") Long userId,
                                         Pageable pageable);
 
     Page<Invoice> findByUserId(Long userId, Pageable pageable);
@@ -44,6 +45,18 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @Query(value = """
     SELECT 
+        EXTRACT(MONTH FROM i.issue_date) AS month,
+        COUNT(*) AS invoice_count
+    FROM invoice i
+    WHERE i.issue_date IS NOT NULL
+      AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
+    GROUP BY month
+    ORDER BY month
+    """, nativeQuery = true)
+    List<Object[]> getMonthlyInvoiceVolume(@Param("year") int year);
+
+    @Query(value = """
+    SELECT 
         d.category,
         SUM(COALESCE(d.total, 0)) AS total
     FROM invoice i
@@ -58,5 +71,41 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     """, nativeQuery = true)
     List<Object[]> getTop5ExpenseCategoriesByYear(@Param("year") int year, @Param("userId") Long userId);
 
-    Long user(User user);
+    @Query(value = """
+    SELECT 
+        u.id AS user_id,
+        u.name AS user_name,
+        u.lastname AS user_lastname,     
+        COUNT(i.id) AS total_invoices,
+        SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_ingresos,
+        SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_gastos
+    FROM invoice i
+    INNER JOIN user u ON i.user_id = u.id
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL
+    GROUP BY u.id, u.name, u.lastname     
+    ORDER BY total_invoices DESC
+    LIMIT 10
+    """, nativeQuery = true)
+    List<Object[]> getTop10UsersByInvoiceVolume();
+
+    @Query(value = """
+    SELECT 
+        SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END)
+    FROM invoice i
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL 
+      AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
+    """, nativeQuery = true)
+    Double getTotalIncomeByYear(@Param("year") int year);
+
+    @Query(value = """
+    SELECT 
+        SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END)
+    FROM invoice i
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL 
+      AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
+    """, nativeQuery = true)
+    Double getTotalExpensesByYear(@Param("year") int year);
 }
