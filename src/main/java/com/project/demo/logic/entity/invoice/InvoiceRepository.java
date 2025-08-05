@@ -108,4 +108,50 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
       AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
     """, nativeQuery = true)
     Double getTotalExpensesByYear(@Param("year") int year);
+
+    @Query(value = """
+    SELECT 
+        EXTRACT(MONTH FROM i.issue_date) AS month,
+        SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END)
+    FROM invoice i
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL
+      AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
+    GROUP BY EXTRACT(MONTH FROM i.issue_date)
+    ORDER BY month
+    """, nativeQuery = true)
+    List<Object[]> getMonthlyIncomeByYear(@Param("year") int year);
+
+    @Query(value = """
+    SELECT 
+        EXTRACT(MONTH FROM i.issue_date) AS month,
+        SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END)
+    FROM invoice i
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL
+      AND (:year = 0 OR EXTRACT(YEAR FROM i.issue_date) = :year)
+    GROUP BY EXTRACT(MONTH FROM i.issue_date)
+    ORDER BY month
+    """, nativeQuery = true)
+    List<Object[]> getMonthlyExpensesByYear(@Param("year") int year);
+
+    @Query(value = """
+    SELECT
+        u.id AS user_id,
+        u.name AS user_name,
+        u.lastname AS user_lastname,
+        SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END) -
+        SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END) AS balance
+    FROM invoice i
+    INNER JOIN user u ON i.user_id = u.id
+    LEFT JOIN details_invoice d ON i.id = d.invoice_id
+    WHERE i.issue_date IS NOT NULL
+    GROUP BY u.id, u.name, u.lastname
+    ORDER BY ABS(
+      SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END) -
+      SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END)
+    ) DESC
+    LIMIT 10
+    """, nativeQuery = true)
+    List<Object[]> getTop10UsersByBalance();
 }

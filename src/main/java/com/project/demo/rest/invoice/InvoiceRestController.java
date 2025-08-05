@@ -117,11 +117,4 @@ public class InvoiceRestController {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", null, HttpStatus.NOT_FOUND, request);
         }
     }
-
-    @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> getInvoicesByUserId(@PathVariable Long userId, HttpServletRequest request) {
-        List<Invoice> invoices = invoiceRepository.findByUserId(userId);
-        return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK, request);
-    }
 }
