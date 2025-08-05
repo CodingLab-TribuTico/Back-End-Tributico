@@ -178,6 +178,7 @@ public class NotificationController {
 
     @PatchMapping("/read/{notificationId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    @Transactional
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId, HttpServletRequest request, @AuthenticationPrincipal User user) {
         Optional<UserNotificationStatus> foundStatus = statusRepository.findByUserIdAndNotificationId(user.getId(), notificationId);
 
