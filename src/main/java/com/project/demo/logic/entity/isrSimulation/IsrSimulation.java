@@ -9,6 +9,7 @@ public class IsrSimulation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     // I. Datos generales
     private String simulationPeriod;
     private String simulationName;
@@ -456,5 +457,4 @@ public class IsrSimulation {
     public void setUser(User user) {
         this.user = user;
     }
-
 }

@@ -125,9 +125,13 @@ public class IsrSimulationRestController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getSimulationByUserId(@PathVariable Long userId, HttpServletRequest request) {
         List<IsrSimulation> simulation = isrRepository.findByUserId(userId);
-
-        return new GlobalResponseHandler().handleResponse("Simulaciones recuperadas exitosamente",
-                simulation, HttpStatus.OK, request);
+        if (simulation.isEmpty()) {
+            return new GlobalResponseHandler().handleResponse("Usuario no tiene simulaciones registradas",
+                    simulation, HttpStatus.NOT_FOUND, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Simulaciones recuperadas exitosamente",
+                    simulation, HttpStatus.OK, request);
+        }
     }
 
     @GetMapping("/{id}")

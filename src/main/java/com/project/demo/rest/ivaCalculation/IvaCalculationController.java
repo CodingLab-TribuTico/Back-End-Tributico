@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -40,7 +41,7 @@ public class IvaCalculationController {
             @RequestParam Long userId,
             HttpServletRequest request
     ) {
-       IvaCalculation result = ivaService.createIvaSimulation(year, month, userId);
+        IvaCalculation result = ivaService.createIvaSimulation(year, month, userId);
         return new GlobalResponseHandler().handleResponse(
                 "Simulación de IVA creada exitosamente",
                 result,
@@ -98,5 +99,43 @@ public class IvaCalculationController {
                 meta);
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> deleteIvaSimulation(@PathVariable Long id, HttpServletRequest request) {
+        Optional<IvaCalculation> foundSimulation = ivaCalculationRepository.findById(id);
+        if (foundSimulation.isPresent()) {
+            ivaCalculationRepository.deleteById(id);
+            return new GlobalResponseHandler().handleResponse("Simulación eliminada exitosamente",
+                    foundSimulation.get(), HttpStatus.OK, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Simulación no encontrada",
+                    id, HttpStatus.NOT_FOUND, request);
+        }
+    }
 
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getSimulationByUserId(@PathVariable Long userId, HttpServletRequest request) {
+        List<IvaCalculation> simulation = ivaCalculationRepository.findByUserId(userId);
+        if (simulation.isEmpty()) {
+            return new GlobalResponseHandler().handleResponse("Usuario no tiene simulaciones registradas",
+                    simulation, HttpStatus.NOT_FOUND, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Simulaciones recuperadas exitosamente",
+                    simulation, HttpStatus.OK, request);
+        }
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getSimulationById(@PathVariable Long id, HttpServletRequest request) {
+        Optional<IvaCalculation> simulation = ivaCalculationRepository.findById(id);
+        if (simulation.isPresent()) {
+            return new GlobalResponseHandler().handleResponse("Simulación encontrada",
+                    simulation, HttpStatus.OK, request);
+        }
+
+        return new GlobalResponseHandler().handleResponse("Simulación no encontrada",
+                null, HttpStatus.NOT_FOUND, request);
+    }
 }

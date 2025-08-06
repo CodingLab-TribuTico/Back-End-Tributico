@@ -42,4 +42,7 @@ public interface IvaCalculationRepository extends JpaRepository<IvaCalculation, 
                                             Pageable pageable);
 
     Page<IvaCalculation> findByUserId(Long userId, Pageable pageable);
+
+    @Query("SELECT i FROM IvaCalculation i WHERE i.user.id = :userId")
+    List<IvaCalculation> findByUserId(@Param("userId") Long userId);
 }
