@@ -1,5 +1,8 @@
 package com.project.demo.logic.entity.ivacalculation;
 
+import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +33,16 @@ public interface IvaCalculationRepository extends JpaRepository<IvaCalculation, 
             @Param("year") int year,
             @Param("month") int month
     );
+
+    @Query("SELECT e FROM IvaCalculation e WHERE " +
+            "e.user.id = :userId AND (" +
+            "LOWER(CAST(e.id AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(e.user.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<IvaCalculation> searchIvaSimulation(@Param("search") String search, @Param("userId") Long userId,
+                                            Pageable pageable);
+
+    Page<IvaCalculation> findByUserId(Long userId, Pageable pageable);
+
+    @Query("SELECT i FROM IvaCalculation i WHERE i.user.id = :userId")
+    List<IvaCalculation> findByUserId(@Param("userId") Long userId);
 }
