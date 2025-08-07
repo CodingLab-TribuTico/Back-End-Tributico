@@ -7,19 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface FiscalCalendarRepository extends JpaRepository<FiscalCalendar, Long> {
 
-    @Query("SELECT n FROM Notification n WHERE " +
+    @Query("SELECT n FROM FiscalCalendar n WHERE " +
             "LOWER(CAST(n.id AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(CAST(n.name AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(n.description) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(n.type) LIKE LOWER(CONCAT('%', :search, '%'))")
-    Page<Notification> searchNotifications(@Param("search") String search, Pageable pageable);
+            "LOWER(n.description) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<FiscalCalendar> searchFiscalCalendar(@Param("search") String search, Pageable pageable);
+    List<FiscalCalendar> findByTaxDeclarationDeadlineBetween(LocalDate startDate, LocalDate endDate);
 
-    Optional<Notification> findById(Long id);
-
-    boolean existsByTypeAndCloseDate(String type, LocalDate closeDate);
 }
-

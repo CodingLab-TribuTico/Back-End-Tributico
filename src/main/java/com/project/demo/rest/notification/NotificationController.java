@@ -31,7 +31,7 @@ public class NotificationController {
     private NotificationRepository notificationRepository;
 
     @Autowired
-    private NotificationStatusRepository statusRepository;
+    private UserNotificationStatusRepository statusRepository;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -83,7 +83,7 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getPendingNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
         try {
-            List<UserNotificationStatus> unread = statusRepository.findByUserIdAndIsReadFalse(user.getId());
+            List<UserNotificationStatus> unread = statusRepository.findByUserIdAndIsReadFalseAndNotification_State(user.getId(),"Activa");
 
             List<Notification> notifications = unread.stream()
                     .map(UserNotificationStatus::getNotification)
@@ -99,7 +99,7 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','USER')")
     public ResponseEntity<?> getAllNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
         try {
-            List<UserNotificationStatus> foundNotifications = statusRepository.findByUserId(user.getId());
+            List<UserNotificationStatus> foundNotifications = statusRepository.findByUserIdAndNotification_State(user.getId(),"Activa");
 
             if (foundNotifications.isEmpty()) {
                 return new GlobalResponseHandler().handleResponse("No hay notificaciones", null, HttpStatus.NO_CONTENT, request);
