@@ -1,5 +1,10 @@
-package com.project.demo.logic.entity.notification;
+package com.project.demo.logic.entity.fiscalCalendar;
 
+import com.project.demo.logic.entity.email.EmailService;
+import com.project.demo.logic.entity.notification.Notification;
+import com.project.demo.logic.entity.notification.NotificationRepository;
+import com.project.demo.logic.entity.notification.UserNotificationStatus;
+import com.project.demo.logic.entity.notification.UserNotificationStatusRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +30,9 @@ public class FiscalNotificationService {
 
     @Autowired
     private UserNotificationStatusRepository statusRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Scheduled(cron = "0 * * * * ?")
     public void checkFiscalDeadlines() {
@@ -57,8 +65,9 @@ public class FiscalNotificationService {
                 event.getTaxDeclarationDeadline());
 
         String message = String.format(
-                "Recordatorio "+event.getType()+": %s. Fecha límite: %s (%d %s restantes)",
+                "Le recordamos que el evento fiscal '%s' correspondiente al tipo '%s' tiene como fecha límite el %s. Restan %d %s para realizar la declaración.",
                 event.getDescription(),
+                event.getType(),
                 event.getTaxDeclarationDeadline().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 daysLeft,
                 daysLeft == 1 ? "día" : "días");
@@ -81,14 +90,8 @@ public class FiscalNotificationService {
             status.setRead(false);
             statusRepository.save(status);
 
-            // Opcional: Enviar también por correo electrónico
-            sendEmailNotification(user.getEmail(), notification);
+            emailService.sendNotificationEmail(user.getEmail(), user.getName(),notification);
         }
-    }
-
-    private void sendEmailNotification(String email, Notification notification) {
-        // Implementación del servicio de correo electrónico
-        // (Necesitarías configurar un servicio de email aparte)
     }
 
 }

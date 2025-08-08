@@ -1,9 +1,10 @@
 package com.project.demo.rest.fiscalCalendar;
 
+import com.project.demo.logic.entity.fiscalCalendar.FiscalCalendarValidator;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
-import com.project.demo.logic.entity.notification.FiscalCalendar;
-import com.project.demo.logic.entity.notification.FiscalCalendarRepository;
+import com.project.demo.logic.entity.fiscalCalendar.FiscalCalendar;
+import com.project.demo.logic.entity.fiscalCalendar.FiscalCalendarRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -26,6 +26,8 @@ public class FiscalCalendarController {
     @Autowired
     private FiscalCalendarRepository fiscalCalendarRepository;
 
+    @Autowired
+    private FiscalCalendarValidator validator;
 
     @GetMapping
     public ResponseEntity<?> getAllFiscalEvents(@RequestParam(defaultValue = "1") int page,
@@ -78,6 +80,10 @@ public class FiscalCalendarController {
     @PutMapping("/{Id}")
     public ResponseEntity<?> updateFiscalEvent(@PathVariable Long Id, @RequestBody FiscalCalendar event, HttpServletRequest request) {
         try {
+            if (!validator.validateDeadline(event.getTaxDeclarationDeadline())) {
+                return new GlobalResponseHandler().handleResponse("La fecha no puede ser anterior a la actual", null, HttpStatus.BAD_REQUEST, request);
+            }
+
             Optional<FiscalCalendar> foundEvent = fiscalCalendarRepository.findById(Id);
             if (foundEvent.isEmpty()) {
                 return new GlobalResponseHandler().handleResponse("No se encontro el evento", null, HttpStatus.NOT_FOUND, request);

@@ -5,6 +5,7 @@ import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.notification.*;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
+import com.project.demo.logic.entity.weSocket.WebSocketService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class NotificationController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private WebSocketService webSocketService;
 
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -124,7 +128,7 @@ public class NotificationController {
         try {
             Notification savedNotification = notificationRepository.save(notification);
 
-            messagingTemplate.convertAndSend("/topic/notifications", savedNotification);
+            webSocketService.sendGlobalNotification(savedNotification,"CREATE");
 
             List<User> users = userRepository.findAll();
             for (User user : users) {
@@ -191,6 +195,25 @@ public class NotificationController {
         return new GlobalResponseHandler().handleResponse("No se encontro una notificación asociada al usuario", null, HttpStatus.NOT_FOUND, request);
     }
 
+    @PatchMapping("/read-all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> markAllAsRead(HttpServletRequest request, @AuthenticationPrincipal User user){
+        try {
+            List<UserNotificationStatus> statusList = statusRepository.findByUserIdAndNotification_State(user.getId(), "Activa");
+            if (statusList.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse("No hay notificaciones", null, HttpStatus.NO_CONTENT, request);
+            }
+
+            for (UserNotificationStatus status : statusList) {
+                status.setRead(true);
+                statusRepository.save(status);
+            }
+            return new GlobalResponseHandler().handleResponse("Notificaciones marcadas como leídas exitosamente", null, HttpStatus.OK, request);
+        }catch (Exception e){
+            return new GlobalResponseHandler().handleResponse("Ocurrio un error al actualizar el leido de las notificaciones",null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
     @DeleteMapping("/{notificationId}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Transactional
@@ -210,12 +233,6 @@ public class NotificationController {
             return new GlobalResponseHandler().handleResponse("Factura con id: " + notificationId + " no encontrado"  ,
                     HttpStatus.NOT_FOUND, request);
         }
-    }
-
-    private boolean isRelevantNotification(LocalDate closeDate){
-        LocalDate today = LocalDate.now();
-        LocalDate threeDaysLater = today.plusDays(3);
-        return !closeDate.isBefore(today) && !closeDate.isAfter(threeDaysLater);
     }
 
 }
