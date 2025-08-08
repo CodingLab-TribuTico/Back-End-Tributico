@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,11 +40,15 @@ public class InvoiceRestController {
         Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Invoice> invoice;
-
+        
         if (search.trim().isEmpty()) {
-            invoice = invoiceRepository.findByUserId(userPrincipal.getId(), pageable);
+            if(userPrincipal.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))) {
+                invoice = invoiceRepository.findAll(pageable);
+            } else {
+                invoice = invoiceRepository.findByUserId(userPrincipal.getId(), pageable);
+            }
         } else {
-            invoice = invoiceRepository.searchElectronicBills(search.trim(), userPrincipal.getId(), pageable);
+            invoice = invoiceRepository.searchInvoices(search.trim(), userPrincipal.getId(), pageable);
         }
 
         meta.setTotalPages(invoice.getTotalPages());
@@ -111,12 +116,5 @@ public class InvoiceRestController {
         } catch (Exception e) {
             return new GlobalResponseHandler().handleResponse("Factura no encontrada", null, HttpStatus.NOT_FOUND, request);
         }
-    }
-
-    @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> getInvoicesByUserId(@PathVariable Long userId, HttpServletRequest request) {
-        List<Invoice> invoices = invoiceRepository.findByUserId(userId);
-        return new GlobalResponseHandler().handleResponse("Facturas recuperadas exitosamente", invoices, HttpStatus.OK, request);
     }
 }

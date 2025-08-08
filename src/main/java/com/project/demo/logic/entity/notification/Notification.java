@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -26,7 +27,7 @@ public class Notification {
     private String type;
 
     @Column(nullable = false)
-    private LocalDateTime closeDate;
+    private LocalDate closeDate;
 
     @Column(nullable = false)
     private String state;
@@ -75,11 +76,11 @@ public class Notification {
         this.type = type;
     }
 
-    public LocalDateTime getCloseDate() {
+    public LocalDate getCloseDate() {
         return closeDate;
     }
 
-    public void setCloseDate(LocalDateTime closeDate) {
+    public void setCloseDate(LocalDate closeDate) {
         this.closeDate = closeDate;
     }
 
