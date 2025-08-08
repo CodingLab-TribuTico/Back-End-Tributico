@@ -2,7 +2,6 @@ package com.project.demo.user;
 
 import com.project.demo.logic.entity.rol.Role;
 import com.project.demo.logic.entity.rol.RoleEnum;
-import com.project.demo.logic.entity.rol.RoleRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import com.project.demo.rest.user.UserRestController;
@@ -11,8 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.platform.commons.logging.Logger;
-import org.junit.platform.commons.logging.LoggerFactory;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Optional;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,13 +31,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class UserRestControllerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserRestControllerTest.class);
-
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private RoleRepository roleRepository;
 
     @Mock
     private HttpServletRequest httpServletRequest;
@@ -70,40 +63,56 @@ public class UserRestControllerTest {
         testUser.setPassword("123");
         testUser.setRole(testRole);
 
+        StringBuffer reqURL = new StringBuffer("http://localhost");
+        when(httpServletRequest.getRequestURL()).thenReturn(reqURL);
     }
 
     @Test
     @DisplayName("Debe crear un usuario")
-    void addUserTest() {
-        when(httpServletRequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
-        when(httpServletRequest.getMethod()).thenReturn("POST");
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword123");
-        when(userRepository.save(any())).thenReturn(testUser);
+    void addUser_WithValidData_ShouldReturnOk() {
+        when(passwordEncoder.encode(anyString())).thenReturn("password");
+        when(userRepository.save(eq(testUser))).thenReturn(testUser);
 
         ResponseEntity<?> response = userRestController.addUser(testUser, httpServletRequest);
 
-        logger.info(() -> "Datos de salida: \n" +
-                "Código de estado: " + response.getStatusCode());
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(userRepository).save(any(User.class));
-
     }
 
     @Test
-    @DisplayName("Debe devolver una lista paginada con los usuarios")
-    void getAllUsersTest() {
+    @DisplayName("Debe retornar una lista paginada con todos los usuarios")
+    void getAllUsers_WhenUsersExist_ShouldReturnPaginatedList() {
         Page<User> usersPage = new PageImpl<>(Collections.singletonList(testUser));
         when(userRepository.findAll(any(Pageable.class))).thenReturn(usersPage);
-        when(httpServletRequest.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
-        when(httpServletRequest.getMethod()).thenReturn("GET");
 
         ResponseEntity<?> response = userRestController.getAll(1, 5, "", httpServletRequest);
 
-        logger.info(() -> "Datos de salida:\nStatus: " + response.getStatusCode());
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(userRepository).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Debe actualizar un usuario cuando el ID proporcionado es válido")
+    void updateUser_WithExistingId_ShouldReturnOk() {
+        when(userRepository.findById(eq(1L))).thenReturn(Optional.of(testUser));
+        when(userRepository.save(eq(testUser))).thenReturn(testUser);
+
+        ResponseEntity<?> response = userRestController.updateUser(1L, testUser, httpServletRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Debe eliminar un usuario cuando el ID proporcionado es válido")
+    void deleteUser_WithExistingId_ShouldReturnOk() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
+        doNothing().when(userRepository).deleteById(anyLong());
+
+        ResponseEntity<?> response = userRestController.deleteUser(1L, httpServletRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userRepository).deleteById(1L);
     }
 
 }
