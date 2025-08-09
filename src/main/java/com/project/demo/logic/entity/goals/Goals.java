@@ -32,6 +32,9 @@ public class Goals {
     @Column(nullable = false)
     private String status;
 
+    @Column(columnDefinition = "TEXT")
+    private String recommendations;
+
     @Column(name = "current_amount", precision = 15, scale = 2)
     private BigDecimal currentAmount;
 
@@ -145,10 +148,19 @@ public class Goals {
         this.updatedDate = updatedDate;
     }
 
+    public String getRecommendations() {
+        return recommendations;
+    }
+    public void setRecommendations(String recommendations) {
+        this.recommendations = recommendations;
+    }
+
     // Métodos de utilidad
     @PreUpdate
     public void preUpdate() {
         this.updatedDate = LocalDate.now();
     }
+
+
 
 }
