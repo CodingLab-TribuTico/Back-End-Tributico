@@ -1,0 +1,103 @@
+package com.project.demo.rest.goals;
+
+import com.project.demo.logic.entity.goals.Goals;
+import com.project.demo.logic.entity.goals.GoalsRepository;
+import com.project.demo.logic.entity.http.GlobalResponseHandler;
+import com.project.demo.logic.entity.user.User;
+import com.project.demo.logic.entity.user.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/goals")
+public class GoalsController {
+
+    @Autowired
+    private GoalsRepository goalsRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+
+    @PostMapping()
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> createGoal(@RequestBody Goals goalRequest, HttpServletRequest request) {
+        try {
+            Optional<User> userOpt = userRepository.findById(goalRequest.getUser().getId());
+            if (userOpt.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse(
+                        "Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
+            }
+
+            if (goalRequest.getDeclaration() == null || goalRequest.getObjective() == null || goalRequest.getDate() == null) {
+                return new GlobalResponseHandler().handleResponse(
+                        "Declaración, objetivo y fecha son requeridos", null, HttpStatus.BAD_REQUEST, request);
+            }
+
+            Goals goal = new Goals();
+            goal.setUser(userOpt.get());
+            goal.setDeclaration(goalRequest.getDeclaration());
+            goal.setType(goalRequest.getType());
+            goal.setObjective(goalRequest.getObjective());
+            goal.setDate(goalRequest.getDate());
+            goal.setStatus("PENDING");
+
+            Goals savedGoal = goalsRepository.save(goal);
+
+            return new GlobalResponseHandler().handleResponse(
+                    "Meta registrada exitosamente", savedGoal, HttpStatus.CREATED, request);
+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse(
+                    "Error al crear meta: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getUserGoals(@PathVariable Long userId, HttpServletRequest request) {
+        try {
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse(
+                        "Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
+            }
+
+            List<Goals> goals = goalsRepository.findByUser(userOpt.get());
+            return new GlobalResponseHandler().handleResponse(
+                    "Metas obtenidas exitosamente", goals, HttpStatus.OK, request);
+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse(
+                    "Error al obtener metas: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
+
+    @DeleteMapping("/{goalId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> deleteGoal(@PathVariable Long goalId, HttpServletRequest request) {
+        try {
+            if (!goalsRepository.existsById(goalId)) {
+                return new GlobalResponseHandler().handleResponse(
+                        "Meta no encontrada", null, HttpStatus.NOT_FOUND, request);
+            }
+
+            goalsRepository.deleteById(goalId);
+            return new GlobalResponseHandler().handleResponse(
+                    "Meta eliminada exitosamente", null, HttpStatus.OK, request);
+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse(
+                    "Error al eliminar meta: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+}
