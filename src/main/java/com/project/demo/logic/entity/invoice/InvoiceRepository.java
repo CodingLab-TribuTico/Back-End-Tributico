@@ -72,20 +72,20 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Object[]> getTop5ExpenseCategoriesByYear(@Param("year") int year, @Param("userId") Long userId);
 
     @Query(value = """
-    SELECT 
-        u.id AS user_id,
-        u.name AS user_name,
-        u.lastname AS user_lastname,     
-        COUNT(i.id) AS total_invoices,
-        SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_ingresos,
-        SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_gastos
+    SELECT
+    u.id AS user_id,
+    u.name AS user_name,
+    u.lastname AS user_lastname,
+    COUNT(DISTINCT i.id) AS total_invoices,
+    SUM(CASE WHEN i.type = 'ingreso' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_ingresos,
+    SUM(CASE WHEN i.type = 'gasto' THEN COALESCE(d.total, 0) ELSE 0 END) AS total_gastos
     FROM invoice i
     INNER JOIN user u ON i.user_id = u.id
     LEFT JOIN details_invoice d ON i.id = d.invoice_id
     WHERE i.issue_date IS NOT NULL
-    GROUP BY u.id, u.name, u.lastname     
+    GROUP BY u.id, u.name, u.lastname
     ORDER BY total_invoices DESC
-    LIMIT 10
+    LIMIT 10;
     """, nativeQuery = true)
     List<Object[]> getTop10UsersByInvoiceVolume();
 
