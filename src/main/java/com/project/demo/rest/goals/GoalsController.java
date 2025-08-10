@@ -69,20 +69,17 @@ public class GoalsController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createGoal(@RequestBody Goals goalRequest, HttpServletRequest request) {
         try {
-            // Validar usuario
             Optional<User> userOpt = userRepository.findById(goalRequest.getUser().getId());
             if (userOpt.isEmpty()) {
                 return new GlobalResponseHandler().handleResponse(
                         "Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
             }
 
-            // Validar campos requeridos
             if (goalRequest.getDeclaration() == null || goalRequest.getObjective() == null || goalRequest.getDate() == null) {
                 return new GlobalResponseHandler().handleResponse(
                         "Declaración, objetivo y fecha son requeridos", null, HttpStatus.BAD_REQUEST, request);
             }
 
-            // Crear meta
             Goals goal = new Goals();
             goal.setUser(userOpt.get());
             goal.setDeclaration(goalRequest.getDeclaration());

@@ -148,7 +148,7 @@ public class LLMService {
 
         OllamaOptions options = OllamaOptions.builder()
                 .model(model)
-                .temperature(0.4) // Balance entre creatividad y precisión
+                .temperature(0.4)
                 .build();
 
         ChatResponse response = chatModel.call(new Prompt(prompt, options));
