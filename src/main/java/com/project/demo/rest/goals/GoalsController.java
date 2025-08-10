@@ -3,7 +3,6 @@ package com.project.demo.rest.goals;
 import com.project.demo.logic.entity.goals.Goals;
 import com.project.demo.logic.entity.goals.GoalsRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
-import com.project.demo.logic.entity.llm.LLMService;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +25,6 @@ public class GoalsController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private LLMService llmService;
 
     @PostMapping()
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
@@ -52,31 +49,10 @@ public class GoalsController {
             goal.setDate(goalRequest.getDate());
             goal.setStatus("PENDING");
 
-            try {
-                String userContext = String.format("Usuario: %s %s, Email: %s",
-                        userOpt.get().getName(),
-                        userOpt.get().getLastname(),
-                        userOpt.get().getEmail());
-
-                String recommendations = llmService.generateTaxRecommendations(
-                        goalRequest.getDeclaration(),
-                        goalRequest.getObjective(),
-                        goalRequest.getDate().toString(),
-                        userContext
-                );
-
-                goal.setRecommendations(recommendations);
-
-            } catch (Exception e) {
-                goal.setRecommendations("Recomendaciones no disponibles en este momento. Intente regenerarlas más tarde.");
-                System.err.println("Error generando recomendaciones: " + e.getMessage());
-            }
-
             Goals savedGoal = goalsRepository.save(goal);
 
             return new GlobalResponseHandler().handleResponse(
-                    "Meta registrada exitosamente con recomendaciones personalizadas",
-                    savedGoal, HttpStatus.CREATED, request);
+                    "Meta registrada exitosamente", savedGoal, HttpStatus.CREATED, request);
 
         } catch (Exception e) {
             return new GlobalResponseHandler().handleResponse(
@@ -124,6 +100,4 @@ public class GoalsController {
                     "Error al eliminar meta: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
-
-
 }
