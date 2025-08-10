@@ -10,25 +10,28 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long>  {
+public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
-    SELECT u FROM User u 
-    WHERE 
-        LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) OR 
-        LOWER(u.lastname) LIKE LOWER(CONCAT('%', :search, '%')) OR 
-        LOWER(u.lastname2) LIKE LOWER(CONCAT('%', :search, '%')) OR 
-        LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
-    """)
+            SELECT u FROM User u
+            WHERE
+                LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                LOWER(u.lastname) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                LOWER(u.lastname2) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
     Page<User> searchUsers(@Param("search") String search, Pageable pageable);
 
     @Query("""
-    SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)
-    """)
+            SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)
+            """)
     Optional<User> findByEmail(@Param("email") String email);
 
+    @Query("SELECT u FROM User u")
+    Page<User> findAll(Pageable pageable);
+
     @Query("""
-    SELECT u FROM User u WHERE LOWER(u.identification) = LOWER(:identification)
-    """)
+            SELECT u FROM User u WHERE LOWER(u.identification) = LOWER(:identification)
+            """)
     Optional<User> findByIdentification(@Param("identification") String identification);
 
     @Query(value = """
