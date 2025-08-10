@@ -3,14 +3,19 @@ package com.project.demo.rest.goals;
 import com.project.demo.logic.entity.goals.Goals;
 import com.project.demo.logic.entity.goals.GoalsRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
+import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.llm.LLMService;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +33,37 @@ public class GoalsController {
 
     @Autowired
     private LLMService llmService;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getAll(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "") String search,
+            @AuthenticationPrincipal User userPrincipal,
+            HttpServletRequest request) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Goals> goalsPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            goalsPage = goalsRepository.findByUserId(userPrincipal.getId(), pageable);
+        } else {
+            goalsPage = goalsRepository.searchGoals(search.trim(), userPrincipal.getId(),
+                    pageable);
+        }
+
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
+        meta.setTotalPages(goalsPage.getTotalPages());
+        meta.setTotalElements(goalsPage.getTotalElements());
+        meta.setPageNumber(goalsPage.getNumber() + 1);
+        meta.setPageSize(goalsPage.getSize());
+
+        return new GlobalResponseHandler().handleResponse(
+                "Metas recuperadas exitosamente",
+                goalsPage.getContent(),
+                HttpStatus.OK,
+                meta);
+    }
 
     @PostMapping()
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
