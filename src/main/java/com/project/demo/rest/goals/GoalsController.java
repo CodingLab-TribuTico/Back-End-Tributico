@@ -3,6 +3,7 @@ package com.project.demo.rest.goals;
 import com.project.demo.logic.entity.goals.Goals;
 import com.project.demo.logic.entity.goals.GoalsRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
+import com.project.demo.logic.entity.llm.LLMService;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,22 +26,27 @@ public class GoalsController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private LLMService llmService;
 
     @PostMapping()
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createGoal(@RequestBody Goals goalRequest, HttpServletRequest request) {
         try {
+            // Validar usuario
             Optional<User> userOpt = userRepository.findById(goalRequest.getUser().getId());
             if (userOpt.isEmpty()) {
                 return new GlobalResponseHandler().handleResponse(
                         "Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
             }
 
+            // Validar campos requeridos
             if (goalRequest.getDeclaration() == null || goalRequest.getObjective() == null || goalRequest.getDate() == null) {
                 return new GlobalResponseHandler().handleResponse(
                         "Declaración, objetivo y fecha son requeridos", null, HttpStatus.BAD_REQUEST, request);
             }
 
+            // Crear meta
             Goals goal = new Goals();
             goal.setUser(userOpt.get());
             goal.setDeclaration(goalRequest.getDeclaration());
@@ -49,10 +55,30 @@ public class GoalsController {
             goal.setDate(goalRequest.getDate());
             goal.setStatus("PENDING");
 
+            try {
+                String userContext = String.format("Usuario: %s %s",
+                        userOpt.get().getName(),
+                        userOpt.get().getLastname());
+
+                String recommendations = llmService.generateTaxRecommendations(
+                        goalRequest.getDeclaration(),
+                        goalRequest.getObjective(),
+                        goalRequest.getDate().toString(),
+                        userContext
+                );
+
+                goal.setRecommendations(recommendations);
+
+            } catch (Exception e) {
+                goal.setRecommendations("Recomendaciones no disponibles en este momento.");
+                System.err.println("Error generando recomendaciones: " + e.getMessage());
+            }
+
             Goals savedGoal = goalsRepository.save(goal);
 
             return new GlobalResponseHandler().handleResponse(
-                    "Meta registrada exitosamente", savedGoal, HttpStatus.CREATED, request);
+                    "Meta registrada exitosamente con recomendaciones personalizadas",
+                    savedGoal, HttpStatus.CREATED, request);
 
         } catch (Exception e) {
             return new GlobalResponseHandler().handleResponse(
