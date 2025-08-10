@@ -1,14 +1,19 @@
 package com.project.demo.rest.isrSimulation;
 
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
+import com.project.demo.logic.entity.http.Meta;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.invoice.InvoiceRepository;
+import com.project.demo.logic.entity.isrSimulation.IsrRepository;
 import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
 import com.project.demo.logic.entity.isrSimulation.TaxIsrCalculationService;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +36,10 @@ public class IsrSimulationRestController {
     @Autowired
     private TaxIsrCalculationService taxIsrCalculationService;
 
-    @GetMapping
+    @Autowired
+    private IsrRepository isrRepository;
+
+    @GetMapping("/create")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> createSimulation(
             @RequestParam(defaultValue = "2024") int year,
@@ -49,5 +57,93 @@ public class IsrSimulationRestController {
         IsrSimulation sim = taxIsrCalculationService.simulate(userOpt.get(), invoices, year, childrenNumber, hasSpouse);
 
         return new GlobalResponseHandler().handleResponse("Simulación generada correctamente", sim, HttpStatus.OK, request);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> saveSimulation(@RequestBody IsrSimulation simulation,
+                                            HttpServletRequest request) {
+        Optional<User> foundUser = userRepository.findById(simulation.getUser().getId());
+        if (foundUser.isPresent()) {
+            simulation.setUser(foundUser.get());
+            IsrSimulation savedSimulation = isrRepository.save(simulation);
+            return new GlobalResponseHandler().handleResponse("Simulación guardada exitosamente",
+                    savedSimulation, HttpStatus.CREATED, request);
+
+        } else {
+            return new GlobalResponseHandler().handleResponse("No se encontro el usuario",
+                    HttpStatus.NOT_FOUND, request);
+        }
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getAll(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "") String search,
+            @AuthenticationPrincipal User userPrincipal,
+            HttpServletRequest request) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<IsrSimulation> simulationPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            simulationPage = isrRepository.findByUserId(userPrincipal.getId(), pageable);
+        } else {
+            simulationPage = isrRepository.searchIsrSimulation(search.trim(), userPrincipal.getId(),
+                    pageable);
+        }
+
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
+        meta.setTotalPages(simulationPage.getTotalPages());
+        meta.setTotalElements(simulationPage.getTotalElements());
+        meta.setPageNumber(simulationPage.getNumber() + 1);
+        meta.setPageSize(simulationPage.getSize());
+
+        return new GlobalResponseHandler().handleResponse(
+                "Simulaciones recuperadas exitosamente",
+                simulationPage.getContent(),
+                HttpStatus.OK,
+                meta);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> deleteIsrSimulation(@PathVariable Long id, HttpServletRequest request) {
+        Optional<IsrSimulation> foundSimulation = isrRepository.findById(id);
+        if (foundSimulation.isPresent()) {
+            isrRepository.deleteById(id);
+            return new GlobalResponseHandler().handleResponse("Simulación eliminada exitosamente",
+                    foundSimulation.get(), HttpStatus.OK, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Simulación no encontrada",
+                    id, HttpStatus.NOT_FOUND, request);
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getSimulationByUserId(@PathVariable Long userId, HttpServletRequest request) {
+        List<IsrSimulation> simulation = isrRepository.findByUserId(userId);
+        if (simulation.isEmpty()) {
+            return new GlobalResponseHandler().handleResponse("Usuario no tiene simulaciones registradas",
+                    simulation, HttpStatus.NOT_FOUND, request);
+        } else {
+            return new GlobalResponseHandler().handleResponse("Simulaciones recuperadas exitosamente",
+                    simulation, HttpStatus.OK, request);
+        }
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> getSimulationById(@PathVariable Long id, HttpServletRequest request) {
+        Optional<IsrSimulation> simulation = isrRepository.findById(id);
+        if (simulation.isPresent()) {
+            return new GlobalResponseHandler().handleResponse("Simulación encontrada",
+                    simulation,HttpStatus.OK, request);
+        }
+
+        return new GlobalResponseHandler().handleResponse("Simulación no encontrada",
+                null,HttpStatus.NOT_FOUND, request);
     }
 }
