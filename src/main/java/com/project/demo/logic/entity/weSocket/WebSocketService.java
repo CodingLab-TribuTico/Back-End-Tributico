@@ -20,7 +20,6 @@ public class WebSocketService {
         );
     }
 
-    // Envía una notificación privada a un usuario específico
     public void sendPrivateNotification(Long userId, Notification notification, String action) {
         messagingTemplate.convertAndSendToUser(
                 userId.toString(),
@@ -29,7 +28,6 @@ public class WebSocketService {
         );
     }
 
-    // Notifica que una notificación fue eliminada
     public void sendNotificationRemoval(Long notificationId) {
         messagingTemplate.convertAndSend(
                 "/topic/notifications",
