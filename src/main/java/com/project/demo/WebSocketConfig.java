@@ -23,10 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
-                .setHandshakeHandler(new DefaultHandshakeHandler())
-                .withSockJS()
-                .setSuppressCors(true);
+                .setAllowedOriginPatterns("*");
 
 
     }

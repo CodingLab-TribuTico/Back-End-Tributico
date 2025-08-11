@@ -19,7 +19,6 @@ public class WebSocketController {
     @MessageMapping("/test")
     @SendTo("/topic/notifications")
     public String handleTestMessage(String message) {
-        // El mensaje del cliente se envía a todos los suscriptores de /topic/notifications
         System.out.println("Mensaje recibido del cliente: " + message);
         return "Mensaje de vuelta: " + message;
     }

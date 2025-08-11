@@ -41,8 +41,7 @@ public class SecurityConfiguration {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                        .csrf(csrf -> csrf.disable()
-                        )
+                        .csrf().disable()
                         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                         .authorizeHttpRequests((authorize) -> authorize
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -50,12 +49,8 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.GET, "/auth/google").permitAll()
                                 .requestMatchers(HttpMethod.PUT, "/auth/block").permitAll()
                                 .requestMatchers("/ws/**", "/topic/**", "/queue/**", "/app/**", "/user/**").permitAll()
-                                .requestMatchers("/favicon.ico").permitAll()
                                 .anyRequest().authenticated())
-                        .headers(headers -> headers
-                                .frameOptions().disable()
-                                .httpStrictTransportSecurity().disable()
-                        )
+
                         .sessionManagement(session -> session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                         )
@@ -76,6 +71,8 @@ public class SecurityConfiguration {
                 configuration.setAllowedMethods(List.of("*"));
                 configuration.setAllowedHeaders(List.of("*"));
                 configuration.setAllowCredentials(true);
+
+                configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin"));
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", configuration);
