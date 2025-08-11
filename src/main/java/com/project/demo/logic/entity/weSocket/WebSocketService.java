@@ -23,7 +23,7 @@ public class WebSocketService {
     public void sendPrivateNotification(Long userId, Notification notification, String action) {
         messagingTemplate.convertAndSendToUser(
                 userId.toString(),
-                "/queue/private-notifications",
+                "user/queue/private-notifications",
                 Map.of("action", action, "data", notification)
         );
     }

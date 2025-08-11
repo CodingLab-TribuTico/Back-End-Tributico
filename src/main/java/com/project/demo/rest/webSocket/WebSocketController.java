@@ -2,6 +2,7 @@ package com.project.demo.rest.webSocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -15,11 +16,10 @@ import java.time.LocalDateTime;
 @Controller
 public class WebSocketController {
 
-
     @MessageMapping("/test")
-    @SendTo("/topic/notifications")
-    public String handleTestMessage(String message) {
+    @SendTo("/topic/test-responses")
+    public String handleTestMessage(@Payload String message) {
         System.out.println("Mensaje recibido del cliente: " + message);
-        return "Mensaje de vuelta: " + message;
+        return "Respuesta del servidor: " + message.toUpperCase();
     }
 }
