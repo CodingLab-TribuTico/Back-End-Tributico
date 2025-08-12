@@ -2,12 +2,10 @@ package com.project.demo.rest.notification;
 
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
-import com.project.demo.logic.entity.notification.Notification;
-import com.project.demo.logic.entity.notification.NotificationRepository;
-import com.project.demo.logic.entity.notification.NotificationStatusRepository;
-import com.project.demo.logic.entity.notification.UserNotificationStatus;
+import com.project.demo.logic.entity.notification.*;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
+import com.project.demo.logic.entity.weSocket.WebSocketService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +32,16 @@ public class NotificationController {
     private NotificationRepository notificationRepository;
 
     @Autowired
-    private NotificationStatusRepository statusRepository;
+    private UserNotificationStatusRepository statusRepository;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private WebSocketService webSocketService;
 
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -73,8 +74,8 @@ public class NotificationController {
                     HttpStatus.OK,
                     meta
             );
-        }catch (Exception e){
-            return new GlobalResponseHandler().handleResponse("Error al recuperar las notificaciones: "+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Error al recuperar las notificaciones: " +
                             e.getMessage(),
                     null,
                     HttpStatus.NO_CONTENT,
@@ -86,15 +87,38 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getPendingNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
         try {
-            List<UserNotificationStatus> unread = statusRepository.findByUserIdAndIsReadFalse(user.getId());
+            List<UserNotificationStatus> unread = statusRepository.findByUserIdAndIsReadFalseAndNotification_State(user.getId(), "Activa");
 
             List<Notification> notifications = unread.stream()
                     .map(UserNotificationStatus::getNotification)
                     .collect(Collectors.toList());
 
             return new GlobalResponseHandler().handleResponse("Notificaciones no leidas", notifications, HttpStatus.OK, request);
-        }catch (Exception e){
+        } catch (Exception e) {
             return new GlobalResponseHandler().handleResponse("Erro al recuerar notificaciones no leídas", null, HttpStatus.BAD_REQUEST, request);
+        }
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','USER')")
+    public ResponseEntity<?> getAllNotifications(HttpServletRequest request, @AuthenticationPrincipal User user) {
+        try {
+            List<UserNotificationStatus> foundNotifications = statusRepository.findByUserIdAndNotification_State(user.getId(), "Activa");
+
+            if (foundNotifications.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse("No hay notificaciones", null, HttpStatus.NO_CONTENT, request);
+            }
+
+            List<NotificationStatus> notifications = foundNotifications.stream()
+                    .map(status -> new NotificationStatus(
+                            status.getNotification(),
+                            status.isRead()
+                    ))
+                    .collect(Collectors.toList());
+
+            return new GlobalResponseHandler().handleResponse("Notificaciones recuperadas con exito", notifications, HttpStatus.OK, request);
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Ocurrio un error al  obtener las notiificaciones", null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
 
@@ -104,7 +128,7 @@ public class NotificationController {
         try {
             Notification savedNotification = notificationRepository.save(notification);
 
-            messagingTemplate.convertAndSend("/topic/notifications", savedNotification);
+            webSocketService.sendGlobalNotification(savedNotification, "CREATE");
 
             List<User> users = userRepository.findAll();
             for (User user : users) {
@@ -117,9 +141,9 @@ public class NotificationController {
 
             return new GlobalResponseHandler().handleResponse("Notificacion creada con exito",
                     savedNotification, HttpStatus.CREATED, request);
-        }catch (Exception e){
-            return new GlobalResponseHandler().handleResponse("Error al crear la notificacion: "+e.getMessage(),null,
-                    HttpStatus.INTERNAL_SERVER_ERROR,request);
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Error al crear la notificacion: " + e.getMessage(), null,
+                    HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
 
@@ -129,9 +153,9 @@ public class NotificationController {
         try {
             Optional<Notification> foundNotification = notificationRepository.findById(id);
 
-            if (foundNotification.isEmpty()){
+            if (foundNotification.isEmpty()) {
                 return new GlobalResponseHandler().handleResponse("Notificacion no encontrada",
-                        null,HttpStatus.NOT_FOUND,request);
+                        null, HttpStatus.NOT_FOUND, request);
             }
 
             Notification updatedNotification = foundNotification.get();
@@ -144,30 +168,55 @@ public class NotificationController {
 
             notificationRepository.save(updatedNotification);
 
-            messagingTemplate.convertAndSend("/topic/notifications", updatedNotification);
+            webSocketService.sendGlobalNotification(updatedNotification, "UPDATE");
 
             return new GlobalResponseHandler().handleResponse("Notificacion actualizada con exito"
-                    ,updatedNotification,HttpStatus.OK,request);
+                    , updatedNotification, HttpStatus.OK, request);
 
-        }catch (Exception e){
-            return new GlobalResponseHandler().handleResponse("Ocurrio un error al actualizar la notificacion: "+
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Ocurrio un error al actualizar la notificacion: " +
                             e.getMessage(),
-                    null, HttpStatus.INTERNAL_SERVER_ERROR,request);
+                    null, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
 
-    @PutMapping("/read/{notificationId}")
+    @PatchMapping("/read/{notificationId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    @Transactional
     public ResponseEntity<?> markAsRead(@PathVariable Long notificationId, HttpServletRequest request, @AuthenticationPrincipal User user) {
         Optional<UserNotificationStatus> foundStatus = statusRepository.findByUserIdAndNotificationId(user.getId(), notificationId);
 
-        if (foundStatus.isPresent()){
+        if (foundStatus.isPresent()) {
             UserNotificationStatus status = foundStatus.get();
             status.setRead(true);
             statusRepository.save(status);
+
+            webSocketService.sendGlobalNotification( status.getNotification(), "MARK_AS_READ");
+
             return new GlobalResponseHandler().handleResponse("Notificación marcada como leída", null, HttpStatus.OK, request);
         }
         return new GlobalResponseHandler().handleResponse("No se encontro una notificación asociada al usuario", null, HttpStatus.NOT_FOUND, request);
+    }
+
+    @PatchMapping("/read-all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
+    public ResponseEntity<?> markAllAsRead(HttpServletRequest request, @AuthenticationPrincipal User user) {
+        try {
+            List<UserNotificationStatus> statusList = statusRepository.findByUserIdAndNotification_State(user.getId(), "Activa");
+            if (statusList.isEmpty()) {
+                return new GlobalResponseHandler().handleResponse("No hay notificaciones", null, HttpStatus.NO_CONTENT, request);
+            }
+
+            for (UserNotificationStatus status : statusList) {
+                status.setRead(true);
+                statusRepository.save(status);
+            }
+            webSocketService.sendGlobalNotification( "", "MARK_ALL_AS_READ");
+
+            return new GlobalResponseHandler().handleResponse("Notificaciones marcadas como leídas exitosamente", null, HttpStatus.OK, request);
+        } catch (Exception e) {
+            return new GlobalResponseHandler().handleResponse("Ocurrio un error al actualizar el leido de las notificaciones", null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
     }
 
     @DeleteMapping("/{notificationId}")
@@ -175,26 +224,20 @@ public class NotificationController {
     @Transactional
     public ResponseEntity<?> deleteUser(@PathVariable Long notificationId, HttpServletRequest request) {
         List<UserNotificationStatus> foundStatus = statusRepository.findByNotificationId(notificationId);
-        if (!foundStatus.isEmpty()){
+        if (!foundStatus.isEmpty()) {
             statusRepository.deleteByNotificationId(notificationId);
         }
         Optional<Notification> foundNotification = notificationRepository.findById(notificationId);
-        if(foundNotification.isPresent()) {
+        if (foundNotification.isPresent()) {
             notificationRepository.deleteById(notificationId);
-            messagingTemplate.convertAndSend("/topic/notifications", notificationId);
+            webSocketService.sendNotificationRemoval(notificationId);
 
             return new GlobalResponseHandler().handleResponse("Notificacion eliminada exitosamente",
                     foundNotification.get(), HttpStatus.OK, request);
         } else {
-            return new GlobalResponseHandler().handleResponse("Factura con id: " + notificationId + " no encontrado"  ,
+            return new GlobalResponseHandler().handleResponse("Factura con id: " + notificationId + " no encontrado",
                     HttpStatus.NOT_FOUND, request);
         }
-    }
-
-    private boolean isRelevantNotification(LocalDate closeDate){
-        LocalDate today = LocalDate.now();
-        LocalDate threeDaysLater = today.plusDays(3);
-        return !closeDate.isBefore(today) && !closeDate.isAfter(threeDaysLater);
     }
 
 }
