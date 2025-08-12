@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.llm;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -7,6 +8,8 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class LLMService {
@@ -113,12 +116,22 @@ public class LLMService {
     }
 
     public String cleanJson(String input) {
+        if (input == null || input.isBlank()) {
+            throw new IllegalArgumentException("La respuesta del modelo está vacía.");
+        }
         int start = input.indexOf('{');
         int end = input.lastIndexOf('}');
         if (start != -1 && end != -1 && start < end) {
-            return input.substring(start, end + 1).trim();
+            String json = input.substring(start, end + 1).trim();
+
+            try {
+                new ObjectMapper().readTree(json);
+                return json;
+            } catch (IOException e) {
+                throw new IllegalArgumentException("El texto extraído no es un JSON válido: " + e.getMessage());
+            }
         }
-        throw new IllegalArgumentException("No se encontró un JSON válido en el texto.");
+        throw new IllegalArgumentException("No se encontró un JSON válido en la respuesta.");
     }
 
     public String generateTaxRecommendations(String declaration, String objective, String targetDate, String userContext) {
