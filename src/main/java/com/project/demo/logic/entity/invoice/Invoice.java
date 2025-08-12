@@ -2,6 +2,7 @@ package com.project.demo.logic.entity.invoice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.project.demo.logic.entity.invoiceUser.InvoiceUser;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;

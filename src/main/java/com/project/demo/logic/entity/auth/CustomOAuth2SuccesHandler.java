@@ -7,6 +7,7 @@ import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -27,6 +28,9 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
 
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${spring.security.front-end.base-url}")
+    private String frontendUrl;
+
     @Autowired
     public CustomOAuth2SuccesHandler(JwtService jwtService, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
@@ -38,6 +42,7 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+
 
         CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
         String email = oauthUser.getEmail();
@@ -59,7 +64,6 @@ public class CustomOAuth2SuccesHandler extends SimpleUrlAuthenticationSuccessHan
         String jwtToken = jwtService.generateToken(user);
 
 
-        String frontendUrl = "http://localhost:4200/login";
         String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("token", jwtToken)
                 .queryParam("expires_in", jwtService.getExpirationTime())

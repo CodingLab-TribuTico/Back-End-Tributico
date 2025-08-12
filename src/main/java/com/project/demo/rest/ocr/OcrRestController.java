@@ -18,8 +18,9 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/ocr")
 public class OcrRestController {
+
     @Autowired
-    private LLMService llmService;
+    LLMService llmService;
 
     @PostMapping
     public ResponseEntity<?> extractText(@RequestParam("file") MultipartFile file, @RequestParam("type") String type, HttpServletRequest request) {
@@ -31,7 +32,6 @@ public class OcrRestController {
                 text = stripper.getText(document);
             }
 
-
             String jsonResponse = llmService.generateInvoiceJson(text, type);
             String cleanJson = llmService.cleanJson(jsonResponse);
 
@@ -41,7 +41,6 @@ public class OcrRestController {
             ObjectNode resultWithType = mapper.createObjectNode();
             resultWithType.setAll((ObjectNode) parsedJson);
             resultWithType.put("type", type);
-
 
             return new GlobalResponseHandler().handleResponse("Texto extraído exitosamente", resultWithType,
                     HttpStatus.OK, request);
