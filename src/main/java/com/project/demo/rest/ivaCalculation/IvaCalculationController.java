@@ -1,12 +1,10 @@
-package com.project.demo.rest.isrSimulation;
+package com.project.demo.rest.ivaCalculation;
 
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
-import com.project.demo.logic.entity.invoice.Invoice;
-import com.project.demo.logic.entity.invoice.InvoiceRepository;
-import com.project.demo.logic.entity.isrSimulation.IsrRepository;
 import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
-import com.project.demo.logic.entity.isrSimulation.TaxIsrCalculationService;
+import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
+import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,49 +22,43 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/isr-simulation")
-public class IsrSimulationRestController {
+@RequestMapping("/iva-simulation")
+public class IvaCalculationController {
+    @Autowired
+    IvaCalculationService ivaService;
 
     @Autowired
-    private InvoiceRepository invoiceRepository;
+    UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private TaxIsrCalculationService taxIsrCalculationService;
-
-    @Autowired
-    private IsrRepository isrRepository;
+    IvaCalculationRepository ivaCalculationRepository;
 
     @GetMapping("/create")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> createSimulation(
-            @RequestParam(defaultValue = "2024") int year,
-            @RequestParam(defaultValue = "0") int childrenNumber,
-            @RequestParam(defaultValue = "false") boolean hasSpouse,
-            @AuthenticationPrincipal User userPrincipal,
+    public ResponseEntity<?> createIvaSimulation(
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam Long userId,
             HttpServletRequest request
     ) {
-        Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
-        if (userOpt.isEmpty()) {
-            return new GlobalResponseHandler().handleResponse("Usuario no encontrado", null, HttpStatus.NOT_FOUND, request);
-        }
+        IvaCalculation result = ivaService.createIvaSimulation(year, month, userId);
+        return new GlobalResponseHandler().handleResponse(
+                "Simulación de IVA creada exitosamente",
+                result,
+                HttpStatus.CREATED,
+                request
+        );
 
-        List<Invoice> invoices = invoiceRepository.findByYear(year, userPrincipal.getId());
-        IsrSimulation sim = taxIsrCalculationService.simulate(userOpt.get(), invoices, year, childrenNumber, hasSpouse);
-
-        return new GlobalResponseHandler().handleResponse("Simulación generada correctamente", sim, HttpStatus.OK, request);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> saveSimulation(@RequestBody IsrSimulation simulation,
+    public ResponseEntity<?> saveSimulation(@RequestBody IvaCalculation simulation,
                                             HttpServletRequest request) {
         Optional<User> foundUser = userRepository.findById(simulation.getUser().getId());
         if (foundUser.isPresent()) {
             simulation.setUser(foundUser.get());
-            IsrSimulation savedSimulation = isrRepository.save(simulation);
+            IvaCalculation savedSimulation = ivaCalculationRepository.save(simulation);
             return new GlobalResponseHandler().handleResponse("Simulación guardada exitosamente",
                     savedSimulation, HttpStatus.CREATED, request);
 
@@ -85,12 +77,12 @@ public class IsrSimulationRestController {
             @AuthenticationPrincipal User userPrincipal,
             HttpServletRequest request) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<IsrSimulation> simulationPage;
+        Page<IvaCalculation> simulationPage;
 
         if (search == null || search.trim().isEmpty()) {
-            simulationPage = isrRepository.findByUserId(userPrincipal.getId(), pageable);
+            simulationPage = ivaCalculationRepository.findByUserId(userPrincipal.getId(), pageable);
         } else {
-            simulationPage = isrRepository.searchIsrSimulation(search.trim(), userPrincipal.getId(),
+            simulationPage = ivaCalculationRepository.searchIvaSimulation(search.trim(), userPrincipal.getId(),
                     pageable);
         }
 
@@ -109,10 +101,10 @@ public class IsrSimulationRestController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public ResponseEntity<?> deleteIsrSimulation(@PathVariable Long id, HttpServletRequest request) {
-        Optional<IsrSimulation> foundSimulation = isrRepository.findById(id);
+    public ResponseEntity<?> deleteIvaSimulation(@PathVariable Long id, HttpServletRequest request) {
+        Optional<IvaCalculation> foundSimulation = ivaCalculationRepository.findById(id);
         if (foundSimulation.isPresent()) {
-            isrRepository.deleteById(id);
+            ivaCalculationRepository.deleteById(id);
             return new GlobalResponseHandler().handleResponse("Simulación eliminada exitosamente",
                     foundSimulation.get(), HttpStatus.OK, request);
         } else {
@@ -124,7 +116,7 @@ public class IsrSimulationRestController {
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getSimulationByUserId(@PathVariable Long userId, HttpServletRequest request) {
-        List<IsrSimulation> simulation = isrRepository.findByUserId(userId);
+        List<IvaCalculation> simulation = ivaCalculationRepository.findByUserId(userId);
         if (simulation.isEmpty()) {
             return new GlobalResponseHandler().handleResponse("Usuario no tiene simulaciones registradas",
                     simulation, HttpStatus.NOT_FOUND, request);
@@ -137,13 +129,13 @@ public class IsrSimulationRestController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
     public ResponseEntity<?> getSimulationById(@PathVariable Long id, HttpServletRequest request) {
-        Optional<IsrSimulation> simulation = isrRepository.findById(id);
+        Optional<IvaCalculation> simulation = ivaCalculationRepository.findById(id);
         if (simulation.isPresent()) {
             return new GlobalResponseHandler().handleResponse("Simulación encontrada",
-                    simulation,HttpStatus.OK, request);
+                    simulation, HttpStatus.OK, request);
         }
 
         return new GlobalResponseHandler().handleResponse("Simulación no encontrada",
-                null,HttpStatus.NOT_FOUND, request);
+                null, HttpStatus.NOT_FOUND, request);
     }
 }

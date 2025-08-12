@@ -65,7 +65,7 @@ public class UserRestController {
     public ResponseEntity<?> addUser(@RequestBody User user, HttpServletRequest request) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        return new GlobalResponseHandler().handleResponse("Usuario actualizado con éxito",
+        return new GlobalResponseHandler().handleResponse("Usuario creado con éxito",
                 user, HttpStatus.OK, request);
     }
 
