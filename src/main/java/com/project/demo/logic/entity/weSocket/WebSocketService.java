@@ -27,27 +27,4 @@ public class WebSocketService {
         );
     }
 
-    // Método específico para marcar como leído
-    public void sendMarkAsReadNotification(Long userId, Long notificationId) {
-        messagingTemplate.convertAndSend(
-                "/topic/notifications",
-                Map.of(
-                        "action", "MARK_AS_READ",
-                        "userId", userId,
-                        "notificationId", notificationId
-                )
-        );
-    }
-
-    // Método específico para marcar todas como leídas
-    public void sendMarkAllAsReadNotification(Long userId) {
-        messagingTemplate.convertAndSend(
-                "/topic/notifications",
-                Map.of(
-                        "action", "MARK_ALL_AS_READ",
-                        "userId", userId
-                )
-        );
-    }
-
 }
