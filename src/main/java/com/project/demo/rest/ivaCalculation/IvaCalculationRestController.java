@@ -2,9 +2,9 @@ package com.project.demo.rest.ivaCalculation;
 
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
 import com.project.demo.logic.entity.http.Meta;
-import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
+import com.project.demo.logic.entity.ivaCalculation.IvaCalculation;
+import com.project.demo.logic.entity.ivaCalculation.IvaCalculationRepository;
+import com.project.demo.logic.entity.ivaCalculation.IvaCalculationService;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/iva-simulation")
-public class IvaCalculationController {
+public class IvaCalculationRestController {
     @Autowired
     IvaCalculationService ivaService;
 

@@ -1,6 +1,5 @@
-package com.project.demo.logic.entity.ivacalculation;
+package com.project.demo.logic.entity.ivaCalculation;
 
-import com.project.demo.logic.entity.isrSimulation.IsrSimulation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

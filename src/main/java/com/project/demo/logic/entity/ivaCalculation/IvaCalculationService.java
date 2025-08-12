@@ -1,10 +1,8 @@
-package com.project.demo.rest.ivaCalculation;
+package com.project.demo.logic.entity.ivaCalculation;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.invoice.InvoiceRepository;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -33,21 +29,12 @@ public class IvaCalculationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Optional<IvaCalculation> existing = ivaCalculationRepository
-                .findByUserAndYearAndMonth(userId, year, month);
-
-        if (existing.isPresent()) {
-            ivaCalculationRepository.delete(existing.get());
-        }
-
         IvaCalculation ivaCalculation = new IvaCalculation(user, year, month);
-
         List<Invoice> invoices = invoiceRepository.findByYear(year, userId);
         processInvoicesForIva(invoices, month, ivaCalculation);
-
         ivaCalculation.calculateTotals();
 
-        return ivaCalculationRepository.save(ivaCalculation);
+        return ivaCalculation;
     }
 
     public IvaCalculation getSimulationById(Long id) {
