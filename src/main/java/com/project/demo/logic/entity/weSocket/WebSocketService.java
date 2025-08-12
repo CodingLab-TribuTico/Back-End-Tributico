@@ -13,18 +13,10 @@ public class WebSocketService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public void sendGlobalNotification(Notification notification, String action) {
+    public void sendGlobalNotification(Object data, String action) {
         messagingTemplate.convertAndSend(
                 "/topic/notifications",
-                Map.of("action", action, "data", notification)
-        );
-    }
-
-    public void sendPrivateNotification(Long userId, Notification notification, String action) {
-        messagingTemplate.convertAndSendToUser(
-                userId.toString(),
-                "user/queue/private-notifications",
-                Map.of("action", action, "data", notification)
+                Map.of("action", action, "data", data)
         );
     }
 
@@ -32,6 +24,29 @@ public class WebSocketService {
         messagingTemplate.convertAndSend(
                 "/topic/notifications",
                 Map.of("action", "DELETE", "id", notificationId)
+        );
+    }
+
+    // Método específico para marcar como leído
+    public void sendMarkAsReadNotification(Long userId, Long notificationId) {
+        messagingTemplate.convertAndSend(
+                "/topic/notifications",
+                Map.of(
+                        "action", "MARK_AS_READ",
+                        "userId", userId,
+                        "notificationId", notificationId
+                )
+        );
+    }
+
+    // Método específico para marcar todas como leídas
+    public void sendMarkAllAsReadNotification(Long userId) {
+        messagingTemplate.convertAndSend(
+                "/topic/notifications",
+                Map.of(
+                        "action", "MARK_ALL_AS_READ",
+                        "userId", userId
+                )
         );
     }
 

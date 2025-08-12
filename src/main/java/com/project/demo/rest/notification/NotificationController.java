@@ -191,7 +191,7 @@ public class NotificationController {
             status.setRead(true);
             statusRepository.save(status);
 
-            webSocketService.sendPrivateNotification(user.getId(), status.getNotification(), "MARK_AS_READ");
+            webSocketService.sendGlobalNotification( status.getNotification(), "MARK_AS_READ");
 
             return new GlobalResponseHandler().handleResponse("Notificación marcada como leída", null, HttpStatus.OK, request);
         }
@@ -211,7 +211,8 @@ public class NotificationController {
                 status.setRead(true);
                 statusRepository.save(status);
             }
-            webSocketService.sendPrivateNotification(user.getId(), null, "MARK_ALL_AS_READ");
+            webSocketService.sendGlobalNotification( "", "MARK_ALL_AS_READ");
+
             return new GlobalResponseHandler().handleResponse("Notificaciones marcadas como leídas exitosamente", null, HttpStatus.OK, request);
         } catch (Exception e) {
             return new GlobalResponseHandler().handleResponse("Ocurrio un error al actualizar el leido de las notificaciones", null, HttpStatus.INTERNAL_SERVER_ERROR, request);

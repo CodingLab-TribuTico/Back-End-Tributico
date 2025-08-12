@@ -7,6 +7,7 @@ import com.project.demo.logic.entity.notification.UserNotificationStatus;
 import com.project.demo.logic.entity.notification.UserNotificationStatusRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
+import com.project.demo.logic.entity.weSocket.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,10 @@ public class FiscalNotificationService {
     @Autowired
     private EmailService emailService;
 
-    @Scheduled(cron = "0 * * * * ?")
+    @Autowired
+    private WebSocketService webSocketService;
+
+    @Scheduled(fixedRate = 30000)
     public void checkFiscalDeadlines() {
         LocalDate today = LocalDate.now();
         LocalDate threeDaysLater = today.plusDays(3);
@@ -90,8 +94,10 @@ public class FiscalNotificationService {
             status.setRead(false);
             statusRepository.save(status);
 
-            emailService.sendNotificationEmail(user.getEmail(), user.getName(),notification);
+            emailService.sendNotificationEmail(user.getEmail(), user.getName(), notification);
         }
+        webSocketService.sendGlobalNotification(notification, "CREATE");
+
     }
 
 }
