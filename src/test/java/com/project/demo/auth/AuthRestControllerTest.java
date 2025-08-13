@@ -51,6 +51,12 @@ public class AuthRestControllerTest {
     private User testUser;
     private Role testRole;
 
+    /**
+     * - Creación de un rol de usuario de prueba
+     * - Creación de un usuario de prueba
+     * - Se utiliza ReflectionTestUtils para inyectar manualmente los mocks de los repositorios,
+     *   permitiendo acceder e inicializar los campos privados para las pruebas.
+     */
     @BeforeEach
     public void setUp() {
 
@@ -69,6 +75,17 @@ public class AuthRestControllerTest {
 
     }
 
+    /**
+     * Prueba unitaria para el método "authenticate" de la clase "AuthRestController",
+     * encargada de verificar que retorne un token válido cuando un usuario se autentica correctamente
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Mockea la búsqueda del usuario por correo electrónico en el repositorio "userRepository"
+     * - Mockea la autenticación del usuario en el servicio "authenticationService"
+     * - Mockea la generacion del token y su tiempo de expiración
+     * - Verifica que la respuesta HTTP sea 200 (OK)
+     * - Verifica que el cuerpo de la respuesta no sea nulo y contenga el token esperado
+     */
     @Test
     @DisplayName("Debe retornar un token válido cuando el usuario se autentica correctamente")
     public void authenticate_WithValidUser_ShouldReturnValidToken() {
@@ -84,6 +101,16 @@ public class AuthRestControllerTest {
         assertEquals("test-token", response.getBody().getToken());
     }
 
+    /**
+     * Prueba unitaria para el método "registerUser" de la clase "AuthRestController",
+     * encargada de verificar que retorne un estado HTTP 409 (Conflict) cuando el correo electrónico
+     * del usuario ya está registrado
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Mockea la búsqueda de un usuario existente por correo electrónico
+     * - Verifica que la respuesta HTTP sea 409 (Conflict)
+     * - Verifica que no se llame al método "save" del repositorio para evitar registros duplicados
+     */
     @Test
     @DisplayName("Debe retornar un estado de conflicto cuando el correo electrónico ya está registrado")
     void registerUser_WithExistingEmail_ShouldReturnConflict() {
