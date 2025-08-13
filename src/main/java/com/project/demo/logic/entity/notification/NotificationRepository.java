@@ -1,12 +1,12 @@
 package com.project.demo.logic.entity.notification;
 
-import com.project.demo.logic.entity.invoice.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
@@ -19,5 +19,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> searchNotifications(@Param("search") String search, Pageable pageable);
 
     Optional<Notification> findById(Long id);
+
+    boolean existsByTypeAndCloseDate(String type, LocalDate closeDate);
 }
 

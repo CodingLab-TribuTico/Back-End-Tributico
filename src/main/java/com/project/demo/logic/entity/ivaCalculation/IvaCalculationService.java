@@ -1,10 +1,8 @@
-package com.project.demo.rest.ivaCalculation;
+package com.project.demo.logic.entity.ivaCalculation;
 
 import com.project.demo.logic.entity.detailsInvoice.DetailsInvoice;
 import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.invoice.InvoiceRepository;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.logic.entity.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -33,21 +29,12 @@ public class IvaCalculationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Optional<IvaCalculation> existing = ivaCalculationRepository
-                .findByUserAndYearAndMonth(userId, year, month);
-
-        if (existing.isPresent()) {
-            ivaCalculationRepository.delete(existing.get());
-        }
-
         IvaCalculation ivaCalculation = new IvaCalculation(user, year, month);
-
         List<Invoice> invoices = invoiceRepository.findByYear(year, userId);
         processInvoicesForIva(invoices, month, ivaCalculation);
-
         ivaCalculation.calculateTotals();
 
-        return ivaCalculationRepository.save(ivaCalculation);
+        return ivaCalculation;
     }
 
     public IvaCalculation getSimulationById(Long id) {
@@ -76,9 +63,15 @@ public class IvaCalculationService {
                     continue;
                 }
 
-                BigDecimal ivaAmount = detail.getTaxAmount() > 0 ?
-                        BigDecimal.valueOf(detail.getTaxAmount()) :
-                        BigDecimal.valueOf(detail.getTotal()).multiply(determineIvaRate(category));
+                BigDecimal ivaAmount;
+                if (detail.getTaxAmount() > 0) {
+                    ivaAmount = BigDecimal.valueOf(detail.getTaxAmount());
+                } else if (category.equals("CBR") || category.equals("CSR")) {
+                    ivaAmount = BigDecimal.valueOf(detail.getTotal())
+                        .multiply(BigDecimal.valueOf(detail.getTax()).divide(BigDecimal.valueOf(100)));
+                } else {
+                    ivaAmount = BigDecimal.valueOf(detail.getTotal()).multiply(determineIvaRate(category));
+                }
 
                 String invoiceType = invoice.getType();
 
@@ -88,6 +81,8 @@ public class IvaCalculationService {
                     accumulateByPercentage(realTaxRate, ivaAmount, ivaCalculation);
                 } else if ("gasto".equalsIgnoreCase(invoiceType)) {
                     processComprasCredito(category, ivaAmount, ivaCalculation);
+                    BigDecimal realTaxRate = BigDecimal.valueOf(detail.getTax()).divide(BigDecimal.valueOf(100));
+                    accumulateByPercentage(realTaxRate, ivaAmount, ivaCalculation); 
                 }
             }
         }
@@ -111,14 +106,16 @@ public class IvaCalculationService {
 
     private void processComprasCredito(String category, BigDecimal ivaAmount, IvaCalculation ivaCalculation) {
         switch (category) {
-            case "CBG", "CBR", "VG-B" -> ivaCalculation.setIvaComprasBienes(
+            case "CBG", "VG-B" -> ivaCalculation.setIvaComprasBienes(
                     ivaCalculation.getIvaComprasBienes().add(ivaAmount));
-            case "CSG", "CSR", "VG-S" -> ivaCalculation.setIvaComprasServicios(
+            case "CSG", "VG-S" -> ivaCalculation.setIvaComprasServicios(
                     ivaCalculation.getIvaComprasServicios().add(ivaAmount));
             case "IMP" -> ivaCalculation.setIvaImportaciones(
                     ivaCalculation.getIvaImportaciones().add(ivaAmount));
             case "CAF" -> ivaCalculation.setIvaActivosFijos(
                     ivaCalculation.getIvaActivosFijos().add(ivaAmount));
+            case "CBR", "CSR" -> {
+            }
             default -> ivaCalculation.setIvaGastosGenerales(
                     ivaCalculation.getIvaGastosGenerales().add(ivaAmount));
         }

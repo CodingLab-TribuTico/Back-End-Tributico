@@ -1,5 +1,6 @@
 package com.project.demo.logic.entity.llm;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -7,6 +8,8 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class LLMService {
@@ -113,42 +116,50 @@ public class LLMService {
     }
 
     public String cleanJson(String input) {
+        if (input == null || input.isBlank()) {
+            throw new IllegalArgumentException("La respuesta del modelo está vacía.");
+        }
         int start = input.indexOf('{');
         int end = input.lastIndexOf('}');
         if (start != -1 && end != -1 && start < end) {
-            return input.substring(start, end + 1).trim();
+            String json = input.substring(start, end + 1).trim();
+
+            try {
+                new ObjectMapper().readTree(json);
+                return json;
+            } catch (IOException e) {
+                throw new IllegalArgumentException("El texto extraído no es un JSON válido: " + e.getMessage());
+            }
         }
-        throw new IllegalArgumentException("No se encontró un JSON válido en el texto.");
+        throw new IllegalArgumentException("No se encontró un JSON válido en la respuesta.");
     }
 
     public String generateTaxRecommendations(String declaration, String objective, String targetDate, String userContext) {
         String prompt = String.format("""
-    Genera consejos específicos y prácticos para el siguiente objetivo tributario en Costa Rica:
-    
-    OBJETIVO: %s
-    TIPO: %s
-    FECHA: %s
-    
-    INSTRUCCIONES ESPECÍFICAS:
-    - Genera exactamente 3 consejos prácticos y específicos para este objetivo
-    - Cada consejo debe ser MUY CORTO (máximo 1 línea)
-    - Enfócate específicamente en cómo lograr "%s"
-    - Si es IVA: consejos sobre crédito fiscal, compras, ventas, fechas de pago
-    - Si es RENTA/ISR: consejos sobre deducciones, pagos a cuenta, documentos
-    - Usa números y datos específicos cuando sea posible
-    - NO uses asteriscos ni formateo especial
-    
-    FORMATO REQUERIDO:
-    1. [Consejo específico de 1 línea]
-    2. [Consejo específico de 1 línea]  
-    3. [Consejo específico de 1 línea]
-    
-    Responde ÚNICAMENTE con los 3 consejos numerados, sin texto adicional.
-    """, objective, declaration, targetDate, objective);
+    Genera una lista simulada de acciones hipotéticas que un usuario del ATV de Hacienda podría considerar
+para alcanzar el siguiente objetivo en un escenario educativo y no vinculante:
+
+OBJETIVO: %s
+TIPO: %s
+FECHA: %s
+
+Instrucciones:
+- Genera exactamente 3 ideas cortas (máximo 1 línea cada una)
+- No uses lenguaje imperativo, describe opciones de forma neutral
+- Enfócate solo en aspectos administrativos y de organización de datos
+- Si es IVA: ejemplos sobre organización de facturas, control de compras/ventas, registro de fechas
+- Si es RENTA/ISR: ejemplos sobre clasificación de gastos, registros contables, seguimiento de ingresos
+- No uses expresiones como "usted debe", "recomendamos" o "asesoría"
+- Presenta la respuesta así:
+1. [idea]
+2. [idea]
+3. [idea]
+""", objective, declaration, targetDate);
 
         OllamaOptions options = OllamaOptions.builder()
                 .model(model)
-                .temperature(0.4)
+                .temperature(0.7)
+                .topP(0.9)
                 .build();
 
         ChatResponse response = chatModel.call(new Prompt(prompt, options));
