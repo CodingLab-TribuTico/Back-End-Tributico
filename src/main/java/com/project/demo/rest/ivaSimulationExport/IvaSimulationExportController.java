@@ -1,8 +1,8 @@
 package com.project.demo.rest.ivaSimulationExport;
 
-import com.project.demo.logic.entity.ivacalculation.IvaCalculation;
-import com.project.demo.logic.entity.ivacalculation.IvaCalculationRepository;
-import com.project.demo.logic.entity.ivacalculation.IvaExportService;
+import com.project.demo.logic.entity.ivaCalculation.IvaCalculation;
+import com.project.demo.logic.entity.ivaCalculation.IvaCalculationRepository;
+import com.project.demo.logic.entity.ivaCalculation.IvaExportService;
 import com.project.demo.rest.simulationExport.SimulationExportController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

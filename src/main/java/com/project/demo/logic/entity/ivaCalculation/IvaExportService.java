@@ -1,4 +1,4 @@
-package com.project.demo.logic.entity.ivacalculation;
+package com.project.demo.logic.entity.ivaCalculation;
 
 import com.project.demo.logic.entity.user.User;
 import org.springframework.stereotype.Service;

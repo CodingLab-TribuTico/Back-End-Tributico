@@ -1,9 +1,13 @@
-package com.project.demo.logic.entity.ivacalculation;
+package com.project.demo.logic.entity.ivaCalculation;
 
 import com.project.demo.logic.entity.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
 @Table(name = "iva_calculation")
@@ -84,6 +88,14 @@ public class IvaCalculation {
 
     @Column(precision = 15, scale = 2, name = "iva_exento")
     private BigDecimal ivaExento = BigDecimal.ZERO;
+
+    @CreationTimestamp
+    @Column(updatable = false, name = "created_at")
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
 
     public IvaCalculation() {}
 
@@ -209,6 +221,22 @@ public class IvaCalculation {
     public BigDecimal getIvaExento() { return ivaExento; }
     public void setIvaExento(BigDecimal ivaExento) {
         this.ivaExento = ivaExento != null ? ivaExento : BigDecimal.ZERO;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public void calculateTotals() {

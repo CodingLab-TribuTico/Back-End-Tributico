@@ -5,6 +5,8 @@ import com.project.demo.logic.entity.invoice.Invoice;
 import com.project.demo.logic.entity.invoice.InvoiceRepository;
 import com.project.demo.logic.entity.invoice.InvoiceService;
 import com.project.demo.logic.entity.invoiceUser.InvoiceUser;
+import com.project.demo.logic.entity.rol.Role;
+import com.project.demo.logic.entity.rol.RoleEnum;
 import com.project.demo.logic.entity.user.User;
 import com.project.demo.rest.invoice.InvoiceRestController;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,15 +51,24 @@ public class InvoiceRestControllerTest {
     private User testUser;
     private List<DetailsInvoice> testDetails;
     private InvoiceUser testInvoiceUser;
+    private Role testRole;
 
+    /**
+     * - Creación de una factura de prueba
+     * - Creación de la lista de detalles de la factura
+     * - Creación de un rol de usuario de prueba
+     * - Creación de un usuario receiver de factura
+     * - Creación de un usuario asociado a la factura con un rol asignado.
+     * - Simulación de la URL base de la solicitud HTTP.
+     */
     @BeforeEach
     void setUp() {
         testInvoice = new Invoice();
         testInvoice.setId(1L);
-        testInvoice.setConsecutive("123456");
+        testInvoice.setConsecutive("00100001000");
         testInvoice.setIssueDate(LocalDate.now());
         testInvoice.setType("Ingreso");
-        testInvoice.setInvoiceKey("12");
+        testInvoice.setInvoiceKey("50615");
         testInvoice.setUser(testUser);
         testInvoice.setReceiver(testInvoiceUser);
         testInvoice.setDetails(testDetails);
@@ -66,16 +77,19 @@ public class InvoiceRestControllerTest {
         DetailsInvoice detailsInvoice = new DetailsInvoice();
         detailsInvoice.setId(1L);
         detailsInvoice.setCabys("1234");
-        detailsInvoice.setDescription("Test");
+        detailsInvoice.setDescription("Servicio de desarrollo web");
         detailsInvoice.setQuantity(2);
-        detailsInvoice.setUnitPrice(2000000);
-        detailsInvoice.setUnit("Test");
+        detailsInvoice.setUnitPrice(5000);
+        detailsInvoice.setUnit("Unidad");
         detailsInvoice.setDiscount(0);
         detailsInvoice.setTax(13);
-        detailsInvoice.setCategory("Test");
-        detailsInvoice.setTaxAmount(2000000);
-        detailsInvoice.setTotal(2300000);
+        detailsInvoice.setCategory("Servicios");
+        detailsInvoice.setTaxAmount(1300);
+        detailsInvoice.setTotal(11300);
         testDetails.add(detailsInvoice);
+
+        testRole = new Role();
+        testRole.setName(RoleEnum.USER);
 
         testInvoiceUser = new InvoiceUser();
         testInvoiceUser.setId(1L);
@@ -84,13 +98,25 @@ public class InvoiceRestControllerTest {
         testInvoiceUser.setIdentification("101110111");
         testInvoiceUser.setEmail("diego@gmail.com");
 
+
         testUser = new User();
         testUser.setId(1L);
+        testUser.setRole(testRole);
 
         StringBuffer reqURL = new StringBuffer("http://localhost");
         when(httpServletRequest.getRequestURL()).thenReturn(reqURL);
     }
 
+    /**
+     * Prueba unitaria para el método "createInvoice" de la clase "InvoiceRestController",
+     * encargada de verificar que se pueda registrar una factura cuando se proporcionan datos válidos.
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Simula la llamada al servicio "InvoiceService" para guardar la factura asociada al usuario.
+     * - Simula el guardado de la factura en el repositorio
+     * - Verifica que se devuelva un código de estado HTTP 201 (CREATED) si la factura se registra exitosamente.
+     * - Verifica que el método "saveInvoice" del servicio "invoiceService" sea llamado con los parámetros correctos.
+     */
     @Test
     @DisplayName("Debe crear una factura")
     void addInvoice_WithValidData_ShouldReturnCreated() {
@@ -102,6 +128,16 @@ public class InvoiceRestControllerTest {
         verify(invoiceService).saveInvoice(any(Invoice.class), eq(testUser.getId()));
     }
 
+    /**
+     * Prueba unitaria para el método "getAll" de la clase "InvoiceRestController",
+     * encargada de verificar que se pueda obtener una lista paginada de facturas cuando existen registros.
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Simula la respuesta del repositorio "invoiceRepository" para devolver una lista paginada con una factura de prueba asociada al usuario.
+     * - Simula la llamada al método "findByUserId" del repositorio con un objeto Pageable.
+     * - Verifica que se devuelva un código de estado HTTP 200 (OK) si la lista de facturas se obtiene correctamente.
+     * - Verifica que el método "findByUserId" del "invoiceRepository" sea llamado con los parámetros correctos.
+     */
     @Test
     @DisplayName("Debe retornar una lista paginada con todas las facturas")
     void getAllInvoices_WhenInvoicesExist_ShouldReturnPaginatedList() {
@@ -115,6 +151,16 @@ public class InvoiceRestControllerTest {
         verify(invoiceRepository).findByUserId(eq(testUser.getId()), any(Pageable.class));
     }
 
+    /**
+     * Prueba unitaria para el método "updateInvoice" de la clase "InvoiceRestController",
+     * encargada de verificar que se pueda actualizar una factura cuando el ID proporcionado es válido.
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Simula la llamada al servicio "invoiceService" para guardar la factura actualizada asociada al usuario.
+     * - Simula el retorno de la factura actualizada.
+     * - Verifica que se devuelva un código de estado HTTP 200 (OK) si la factura se actualiza correctamente.
+     * - Verifica que el método "saveInvoice" del servicio "invoiceService" sea llamado con los parámetros correctos.
+     */
     @Test
     @DisplayName("Debe actualizar una factura cuando el ID proporcionado es válido")
     void updateInvoice_WithExistingId_ShouldReturnOk() {
@@ -126,6 +172,16 @@ public class InvoiceRestControllerTest {
         verify(invoiceService).saveInvoice(any(Invoice.class), eq(testUser.getId()));
     }
 
+    /**
+     * Prueba unitaria para el método "deleteInvoice" de la clase "InvoiceRestController",
+     * encargada de verificar que se pueda eliminar una factura cuando el ID proporcionado es válido.
+     *
+     * La prueba unitaria realiza las siguientes acciones:
+     * - Simula la llamada al servicio "invoiceService" para eliminar la factura por ID.
+     * - Simula la ejecución de la eliminación sin errores.
+     * - Verifica que se devuelva un código de estado HTTP 200 (OK) si la factura se elimina correctamente.
+     * - Verifica que el método "deleteInvoice" del servicio "invoiceService" sea llamado con el ID correcto.
+     */
     @Test
     @DisplayName("Debe eliminar una factura cuando el ID proporcionado es válido")
     void deleteInvoice_WithExistingId_ShouldReturnOk() {
